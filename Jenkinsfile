@@ -1,16 +1,5 @@
 pipeline {
     agent any
-<<<<<<< HEAD
-=======
-    environment {
-        def mvnHome
-      //   commitId = gitUtils.getCommitId()
-      //
-      //   credentialsId = 'svc_icinga-bitbucket'
-      //   imageName = "prom/automic-exporter:build-${env.BUILD_ID}"
-      //   imageRepo = "tools.adidas-group.com:5000"
-    }
->>>>>>> 91ee335273df3dabb132a88d4b258c5d922af07d
     stages {
         stage ('Clone') {
             steps {

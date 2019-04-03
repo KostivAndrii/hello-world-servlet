@@ -3,6 +3,7 @@ pipeline {
     environment {
         def mvnHome
       //   commitId = gitUtils.getCommitId()
+      //
       //   credentialsId = 'svc_icinga-bitbucket'
       //   imageName = "prom/automic-exporter:build-${env.BUILD_ID}"
       //   imageRepo = "tools.adidas-group.com:5000"

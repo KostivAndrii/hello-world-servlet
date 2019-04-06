@@ -38,6 +38,24 @@ pipeline {
                 )
             }
         }
+        stage("Publish war") {
+            steps{
+                dir("target/") {
+                    rtUpload (
+                      serverId: "artifactory",
+                      spec:
+                          """{
+                              "files": [
+                                  {
+                                  "pattern": "*.war",
+                                  "target": "master/*.war"
+                                  }
+                              ]
+                          }"""
+                    )
+                },
+            }
+        }
         stage ('Publish build info') {
             steps {
                 rtPublishBuildInfo (

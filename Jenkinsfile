@@ -38,7 +38,7 @@ pipeline {
                 )
             }
         }
-        stage("Publish war") {
+/*        stage("Publish *.war") {
             steps{
                 dir("target/") {
                     rtUpload (
@@ -55,7 +55,7 @@ pipeline {
                     )
                 }
             }
-        }
+        }*/
         stage ('Publish build info') {
             steps {
                 rtPublishBuildInfo (

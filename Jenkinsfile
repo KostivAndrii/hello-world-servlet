@@ -53,7 +53,7 @@ pipeline {
                               ]
                           }"""
                     )
-                },
+                }
             }
         }
         stage ('Publish build info') {

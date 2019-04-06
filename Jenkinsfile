@@ -46,8 +46,7 @@ pipeline {
                       """{
                           "files": [
                               {
-                              "pattern": "target/*.war",
-//                              "target": "master/*.war"
+                              "pattern": "target/*.war"
                               }
                           ]
                       }"""

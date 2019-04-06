@@ -42,7 +42,7 @@ pipeline {
             steps{
                 dir("target/") {
                     rtUpload (
-                      serverId: "artifactory",
+                      serverId: "ARTIFACTORY_SERVER",
                       spec:
                           """{
                               "files": [

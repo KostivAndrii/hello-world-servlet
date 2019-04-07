@@ -41,22 +41,6 @@ pipeline {
                 )
             }
         }
-/*        stage("Publish *.war") {
-            steps{
-                rtUpload (
-                  serverId: "ARTIFACTORY_SERVER",
-                  spec:
-                      """{
-                          "files": [
-                              {
-                              "pattern": "target/*.war",
-                              "target": "master/"
-                              }
-                          ]
-                      }"""
-                )
-            }
-        }*/
         stage ('Publish build info') {
             steps {
                 rtPublishBuildInfo (

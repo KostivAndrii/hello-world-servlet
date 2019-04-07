@@ -38,7 +38,7 @@ pipeline {
                 )
             }
         }
-        stage("Publish *.war") {
+/*        stage("Publish *.war") {
             steps{
                 rtUpload (
                   serverId: "ARTIFACTORY_SERVER",
@@ -53,7 +53,7 @@ pipeline {
                       }"""
                 )
             }
-        }
+        }*/
         stage ('Publish build info') {
             steps {
                 rtPublishBuildInfo (

@@ -38,7 +38,6 @@ pipeline {
                     goals: 'clean install',
                     deployerId: "MAVEN_DEPLOYER",
                     resolverId: "MAVEN_RESOLVER"
-                
             }
         }
         stage ('Publish build info') {

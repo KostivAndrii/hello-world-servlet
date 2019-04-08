@@ -41,6 +41,13 @@ pipeline {
                 )
             }
         }
+        stage ('SonarQube') {
+            steps {
+                echo 'Hello, SonarQube'
+                sh 'mvn --version'
+                sh "mvn clean package sonar:sonar"
+            }
+        }
         stage ('Publish build info') {
             steps {
                 rtPublishBuildInfo (

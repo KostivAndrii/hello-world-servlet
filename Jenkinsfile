@@ -44,6 +44,7 @@ pipeline {
         stage ('SonarQube') {
             steps {
                 echo 'Hello, SonarQube'
+                sh 'aws ec2 describe-regions --output table'
                 sh 'mvn --version'
                 sh "mvn clean package sonar:sonar"
             }

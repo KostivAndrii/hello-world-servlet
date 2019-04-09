@@ -1,8 +1,8 @@
 pipeline {
     agent any
-    triggers {
+/*    triggers {
               pollSCM '* * * * *'
-    }
+    }*/
     stages {
         stage ('Clone') {
             steps {

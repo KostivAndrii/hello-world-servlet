@@ -44,9 +44,6 @@ pipeline {
         stage ('SonarQube') {
             steps {
                 echo 'Hello, SonarQube'
-                sh 'pwd'
-                sh 'ls -la'
-                sh './aws_ec2.sh'
                 sh 'mvn --version'
                 sh "mvn clean package sonar:sonar"
             }

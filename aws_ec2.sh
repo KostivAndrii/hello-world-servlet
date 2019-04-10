@@ -6,6 +6,7 @@ aws_key_name="aws-test-key"
 ssh_key="aws-test-key.pem"
 sec_name=JenkinsSG
 sec_desc="Jenkins SG"
+rm -rf $ssh_key
 
 aws ec2 create-key-pair --key-name $aws_key_name --query 'KeyMaterial' --output text 2>&1 | tee $ssh_key
 echo "Setting permissions for ssh key $ssh_key"

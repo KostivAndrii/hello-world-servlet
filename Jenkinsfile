@@ -6,7 +6,6 @@ pipeline {
     stages {
         stage ('Clone') {
             steps {
-                cleanWs()
                 git branch: 'master', url: "https://github.com/KostivAndrii/hello-world-servlet.git"
             }
         }

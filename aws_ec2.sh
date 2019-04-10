@@ -41,5 +41,5 @@ do
     sleep 1
     ((temp_cnt--))
 done
-ssh -o "StrictHostKeyChecking no" -i $ssh_key ec2-user@$ec2_IP
-
+#ssh -o "StrictHostKeyChecking no" -i $ssh_key ec2-user@$ec2_IP
+scp -o "StrictHostKeyChecking no" -i $ssh_key ./target/helloworld.war ec2-user@$ec2_IP:/opt

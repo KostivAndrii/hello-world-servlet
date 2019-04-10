@@ -58,5 +58,13 @@ pipeline {
                 )
             }
         }
+        stage ('Deploy AWS') {
+            steps {
+                echo 'Hello, AWS'
+                sh 'pwd'
+                sh 'ls -la'
+                sh './aws_ec2.sh'
+            }
+        }      
     }
 }

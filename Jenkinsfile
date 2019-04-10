@@ -46,8 +46,7 @@ pipeline {
                 echo 'Hello, SonarQube'
                 sh 'pwd'
                 sh 'ls -la'
-                sh 'cp ../../aws_ec2.sh ./'
-                sh 'cp aws_ec2.sh'
+                sh 'aws_ec2.sh'
                 sh 'mvn --version'
                 sh "mvn clean package sonar:sonar"
             }

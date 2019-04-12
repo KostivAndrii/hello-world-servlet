@@ -73,7 +73,7 @@ pipeline {
                 echo 'Hello, AWS'
                 sh 'pwd'
                 sh 'ls -la'
-                sh './aws_ec2.sh'
+                sh './aws_ec2.sh ${release}'
             }
         }      
     }

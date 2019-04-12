@@ -6,6 +6,24 @@ aws_key_name="aws-test-key"
 ssh_key="aws-test-key.pem"
 sec_name=JenkinsSG
 sec_desc="Jenkins SG"
+
+release=$1
+
+url_r='http://artifactory:8081/artifactory/libs-release-local/com/geekcap/vmturbo/hello-world-servlet-example/'
+url_s='http://artifactory:8081/artifactory/libs-snapshot-local/com/geekcap/vmturbo/hello-world-servlet-example/'
+
+IS_RELEASE=$(echo ${release} | sed -n 's/.*\(RELEASE\).*/\1/p')
+
+if [[ "$IS_RELEASE" == "RELEASE" ]]; then
+    folder=$(echo $release | sed -n 's/.*example-\(.*\).war/\1/p')
+    url=${url_r}${folder}'/'${release}
+else
+    version=$(echo $release | cut -d- -f5)
+    url=${url_s}${version}'-SNAPSHOT/'${release}
+fi
+
+wget $url
+
 rm -rf $ssh_key
 
 aws ec2 create-key-pair --key-name $aws_key_name --query 'KeyMaterial' --output text 2>&1 | tee $ssh_key
@@ -42,4 +60,5 @@ do
     ((temp_cnt--))
 done
 #ssh -o "StrictHostKeyChecking no" -i $ssh_key ec2-user@$ec2_IP
-scp -o "StrictHostKeyChecking no" -i $ssh_key ./target/helloworld.war ec2-user@$ec2_IP:/home/ec2-user
+#scp -o "StrictHostKeyChecking no" -i $ssh_key ./target/helloworld.war ec2-user@$ec2_IP:/home/ec2-user
+scp -o "StrictHostKeyChecking no" -i $ssh_key ./$release ec2-user@$ec2_IP:/home/ec2-user

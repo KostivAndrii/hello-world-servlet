@@ -4,7 +4,7 @@
   <groupId>com.geekcap.vmturbo</groupId>
   <artifactId>hello-world-servlet-example</artifactId>
   <packaging>war</packaging>
-  <version>1.0-RELEASE</version>
+  <version>1.1-RELEASE</version>
   <name>hello-world-servlet-example Maven Webapp</name>
   <url>http://maven.apache.org</url>
 

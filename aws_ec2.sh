@@ -59,6 +59,9 @@ do
     sleep 1
     ((temp_cnt--))
 done
-#ssh -o "StrictHostKeyChecking no" -i $ssh_key ec2-user@$ec2_IP
+
 #scp -o "StrictHostKeyChecking no" -i $ssh_key ./target/helloworld.war ec2-user@$ec2_IP:/home/ec2-user
 scp -o "StrictHostKeyChecking no" -i $ssh_key ./$release ec2-user@$ec2_IP:/home/ec2-user
+
+#ssh -o "StrictHostKeyChecking no" -i aws-test-key.pem ec2-user@$ec2_IP
+#aws ec2 create-key-pair --key-name aws-test-key --query 'KeyMaterial' --output text 2>&1 | tee aws-test-key.pem

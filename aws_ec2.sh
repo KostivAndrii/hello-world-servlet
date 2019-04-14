@@ -25,7 +25,7 @@ fi
 
 wget $url
 
-echo 'url ' $url
+#echo 'url ' $url
 
 rm -rf $ssh_key
 
@@ -40,8 +40,9 @@ echo $ec2_sg > ec2_sg.txt
 sec_ids=$(echo $ec2_sg | sed -n 's/.*GroupId": "\(.*\)" .*/\1/p')
 echo 'sec group ids ' $sec_ids
 
-echo "add 22 rule"
+echo "add 22 and 8080 rule"
 aws ec2 authorize-security-group-ingress --group-name $sec_name --protocol tcp --port 22 --cidr 0.0.0.0/0
+aws ec2 authorize-security-group-ingress --group-name $sec_name --protocol tcp --port 8080 --cidr 0.0.0.0/0
 
 echo "Creating instance ..."
 ec2_id=$(aws ec2 run-instances --image-id $aws_image_id --count 1 --instance-type $i_type --key-name $aws_key_name --security-group-ids "$sec_ids" --associate-public-ip-address)

@@ -8,6 +8,7 @@ sec_name=JenkinsSG
 sec_desc="Jenkins SG"
 
 release=$1
+echo 'release ' $release
 
 url_r='http://artifactory:8081/artifactory/libs-release-local/com/geekcap/vmturbo/hello-world-servlet-example/'
 url_s='http://artifactory:8081/artifactory/libs-snapshot-local/com/geekcap/vmturbo/hello-world-servlet-example/'
@@ -23,6 +24,8 @@ else
 fi
 
 wget $url
+
+echo 'url ' $url
 
 rm -rf $ssh_key
 

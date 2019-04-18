@@ -1,0 +1,7 @@
+---
+- hosts: tomcat
+  become: yes
+  gather_facts: true
+  roles:
+    - tomcat
+#    - docker

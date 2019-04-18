@@ -1,6 +1,11 @@
 ---
 # tasks file for tomcat
 
+- name: Ensure Java is installed for RedHat. java-1.{{ jdk_version | default(8) }}.0-openjdk
+  yum:
+    name: java-1.8.0-openjdk
+    state: present
+
 - name: Add group tomcat
   group: name={{ tomcat_user }} state=present
 

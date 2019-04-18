@@ -1,7 +1,6 @@
 ---
-- hosts: tomcat
+- hosts: tag_VM_Tomcat
   become: yes
   gather_facts: true
   roles:
     - tomcat
-#    - docker

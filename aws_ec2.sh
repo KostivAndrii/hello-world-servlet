@@ -72,8 +72,11 @@ do
 done
 
 ec2_IP=$(aws ec2 describe-instances --query "Reservations[*].Instances[*].PublicIpAddress" --output=text --filter Name=tag:VM,Values=Tomcat)
-#scp -o "StrictHostKeyChecking no" -i $ssh_key ./target/helloworld.war ec2-user@$ec2_IP:/home/ec2-user
-scp -o "StrictHostKeyChecking no" -i $ssh_key ./$release ec2-user@$ec2_IP:/home/ec2-user
 
+echo "IP " $ec2_IP
+#scp -o "StrictHostKeyChecking no" -i $ssh_key ./target/helloworld.war ec2-user@$ec2_IP:/home/ec2-user
+scp -o "StrictHostKeyChecking no" -i $ssh_key ./hello-world.war ec2-user@$ec2_IP:/home/ec2-user
+
+#aws cloudformation delete-stack --stack-name PROD
 #ssh -o "StrictHostKeyChecking no" -i aws-test-key.pem ec2-user@$ec2_IP
 #aws ec2 create-key-pair --key-name aws-test-key --query 'KeyMaterial' --output text 2>&1 | tee aws-test-key.pem

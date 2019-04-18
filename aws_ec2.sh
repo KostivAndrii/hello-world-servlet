@@ -2,8 +2,8 @@
 
 aws_image_id="ami-0dd7e7ed60da8fb83"
 i_type="t2.micro"
-aws_key_name="aws-test-key"
-ssh_key="aws-test-key.pem"
+aws_key_name="aws-test-oregon"
+ssh_key="aws-test-oregon.pem"
 sec_name=JenkinsSG
 sec_desc="Jenkins SG"
 
@@ -33,11 +33,11 @@ curl http://artifactory:8081/artifactory/libs-snapshot-local/com/geekcap/vmturbo
 
 #rm -rf $ssh_key
 
-#aws ec2 create-key-pair --key-name $aws_key_name --query 'KeyMaterial' --output text 2>&1 | tee $ssh_key
+aws ec2 create-key-pair --key-name $aws_key_name --query 'KeyMaterial' --output text 2>&1 | tee $ssh_key
 echo "Setting permissions for ssh key $ssh_key"
 chmod 400 $ssh_key
 
-aws cloudformation create-stack --stack-name PROD --template-body file://./ec2.yaml --parameters ParameterKey=KeyName,ParameterValue=aws-test-oregon
+aws cloudformation create-stack --stack-name PROD --template-body file://./ec2.yaml --parameters ParameterKey=KeyName,ParameterValue=$aws_key_name
 
 ##echo "Creating sec group $sec_name"
 ##ec2_sg=$(aws ec2 create-security-group --group-name $sec_name --description "$sec_desc")

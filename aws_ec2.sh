@@ -23,7 +23,11 @@ else
     url=${url_s}${version}'-SNAPSHOT/'${release}
 fi
 
-wget $url
+rm -f hello-world.war
+
+curl http://artifactory:8081/artifactory/libs-snapshot-local/com/geekcap/vmturbo/hello-world-servlet-example/1.3-SNAPSHOT/hello-world-servlet-example-1.3-20190417.074435-1.war > hello-world.war
+
+#wget $url
 
 #echo 'url ' $url
 
@@ -33,27 +37,30 @@ wget $url
 echo "Setting permissions for ssh key $ssh_key"
 chmod 400 $ssh_key
 
-echo "Creating sec group $sec_name"
-ec2_sg=$(aws ec2 create-security-group --group-name $sec_name --description "$sec_desc")
+aws cloudformation create-stack --stack-name PROD --template-body file://./ec2.yaml --parameters ParameterKey=KeyName,ParameterValue=aws-test-oregon
 
-echo $ec2_sg > ec2_sg.txt
-sec_ids=$(echo $ec2_sg | sed -n 's/.*GroupId": "\(.*\)" .*/\1/p')
-echo 'sec group ids ' $sec_ids
+##echo "Creating sec group $sec_name"
+##ec2_sg=$(aws ec2 create-security-group --group-name $sec_name --description "$sec_desc")
 
-echo "add 22 and 8080 rule"
-aws ec2 authorize-security-group-ingress --group-name $sec_name --protocol tcp --port 22 --cidr 0.0.0.0/0
-aws ec2 authorize-security-group-ingress --group-name $sec_name --protocol tcp --port 8080 --cidr 0.0.0.0/0
+##echo $ec2_sg > ec2_sg.txt
+##sec_ids=$(echo $ec2_sg | sed -n 's/.*GroupId": "\(.*\)" .*/\1/p')
+##echo 'sec group ids ' $sec_ids
+
+##echo "add 22 and 8080 rule"
+##aws ec2 authorize-security-group-ingress --group-name $sec_name --protocol tcp --port 22 --cidr 0.0.0.0/0
+##aws ec2 authorize-security-group-ingress --group-name $sec_name --protocol tcp --port 8080 --cidr 0.0.0.0/0
 
 echo "Creating instance ..."
-ec2_id=$(aws ec2 run-instances --image-id $aws_image_id --count 1 --instance-type $i_type --key-name $aws_key_name --security-group-ids "$sec_ids" --associate-public-ip-address)
-echo  $ec2_id > ec2_id.txt
+##ec2_id=$(aws ec2 run-instances --image-id $aws_image_id --count 1 --instance-type $i_type --key-name $aws_key_name --security-group-ids "$sec_ids" --associate-public-ip-address)
+##echo  $ec2_id > ec2_id.txt
 
-inst_ids=$(echo $ec2_id | sed -n 's/.*InstanceId": "\(.*\)", "ImageId.*/\1/p')
-echo 'InstanceId: '$inst_ids
+##inst_ids=$(echo $ec2_id | sed -n 's/.*InstanceId": "\(.*\)", "ImageId.*/\1/p')
+##echo 'InstanceId: '$inst_ids
 
-echo "Obtaining instance description ..."
-ec2_IP=$(aws ec2 describe-instances --instance-ids $inst_ids | sed -n 's/.*PublicIpAddress": "\(.*\)".*/\1/p')
-echo 'PublicIpAddress: '$ec2_IP
+##echo "Obtaining instance description ..."
+#ec2_IP=$(aws ec2 describe-instances --instance-ids $inst_ids | sed -n 's/.*PublicIpAddress": "\(.*\)".*/\1/p')
+##echo 'PublicIpAddress: '$ec2_IP
+#ec2_IP=$(aws ec2 describe-instances --query "Reservations[*].Instances[*].PublicIpAddress" --output=text --filter Name=tag:VM,Values=Tomcat)
 
 countdown_timer=120
 temp_cnt=${countdown_timer}
@@ -64,6 +71,7 @@ do
     ((temp_cnt--))
 done
 
+ec2_IP=$(aws ec2 describe-instances --query "Reservations[*].Instances[*].PublicIpAddress" --output=text --filter Name=tag:VM,Values=Tomcat)
 #scp -o "StrictHostKeyChecking no" -i $ssh_key ./target/helloworld.war ec2-user@$ec2_IP:/home/ec2-user
 scp -o "StrictHostKeyChecking no" -i $ssh_key ./$release ec2-user@$ec2_IP:/home/ec2-user
 

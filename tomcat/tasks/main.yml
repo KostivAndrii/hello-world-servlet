@@ -97,11 +97,11 @@
 #     group: "{{ tomcat_group }}"
 #     mode: 0755
 
- - name: "Delete folders {docs,examples,host-manager,ROOT}"
-   file:
-     path: "{{ tomcat_dest}}/webapps/{{ item }}"
-     state: absent
-   loop: [ docs, examples, host-manager, ROOT ]
+- name: "Delete folders {docs,examples,host-manager,ROOT}"
+  file:
+    path: "{{ tomcat_dest}}/webapps/{{ item }}"
+    state: absent
+  loop: [ docs, examples, host-manager, ROOT ]
 
 - name: start & enable tomcat
   service: name=tomcat state=started enabled=yes

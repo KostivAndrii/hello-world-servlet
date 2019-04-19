@@ -70,13 +70,24 @@
     group: root
     mode: 0755
 
-- name: coping tomcat/conf/server.xml
+#- name: coping tomcat/conf/server.xml
+#  copy:
+#    src: server.xml
+#    dest: "{{ tomcat_dest }}/conf"
+#    owner: "{{ tomcat_user }}"
+#    group: "{{ tomcat_group }}"
+#    mode: 0600
+
+- name: coping tomcat/conf/ [ server.xml, context.xml ]
   copy:
-    src: server.xml
+    src: "{{ item }}"
     dest: "{{ tomcat_dest }}/conf"
     owner: "{{ tomcat_user }}"
     group: "{{ tomcat_group }}"
     mode: 0600
+  loop:
+    [ server.xml, context.xml ]
+
 
 - name: copying tomcat-users.xml
   template: 

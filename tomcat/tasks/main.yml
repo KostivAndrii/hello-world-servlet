@@ -70,24 +70,16 @@
     group: root
     mode: 0755
 
-#- name: coping tomcat/conf/server.xml
-#  copy:
-#    src: server.xml
-#    dest: "{{ tomcat_dest }}/conf"
-#    owner: "{{ tomcat_user }}"
-#    group: "{{ tomcat_group }}"
-#    mode: 0600
-
 - name: coping tomcat/conf/ [ server.xml, context.xml ]
   copy:
-    src: "{{ item }}"
-    dest: "{{ tomcat_dest }}/conf"
+    src: "{{ item.file }}"
+    dest: "{{ tomcat_dest }}{{ item.path}}"
     owner: "{{ tomcat_user }}"
     group: "{{ tomcat_group }}"
     mode: 0600
   loop:
-    [ server.xml, context.xml ]
-
+    - { file: server.xml, path: "/conf/" }
+    - { file: context.xml, path: "/webapps/manager/META-INF/" }
 
 - name: copying tomcat-users.xml
   template: 
@@ -105,11 +97,11 @@
 #     group: "{{ tomcat_group }}"
 #     mode: 0755
 
-# - name: "Delete folders {docs,examples,host-manager,ROOT}"
-#   file:
-#     path: "{{ tomcat_dest}}/webapps/{{ item }}"
-#     state: absent
-#   loop: [ docs, examples, host-manager, ROOT ]
+ - name: "Delete folders {docs,examples,host-manager,ROOT}"
+   file:
+     path: "{{ tomcat_dest}}/webapps/{{ item }}"
+     state: absent
+   loop: [ docs, examples, host-manager, ROOT ]
 
 - name: start & enable tomcat
   service: name=tomcat state=started enabled=yes

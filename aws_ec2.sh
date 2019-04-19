@@ -25,7 +25,7 @@ fi
 
 rm -f hello-world.war
 
-curl http://artifactory:8081/artifactory/libs-snapshot-local/com/geekcap/vmturbo/hello-world-servlet-example/1.3-SNAPSHOT/hello-world-servlet-example-1.3-20190417.074435-1.war > hello-world.war
+curl $url > hello-world.war
 
 #wget $url
 

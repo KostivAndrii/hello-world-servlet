@@ -1,4 +1,4 @@
-import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 
 //    def response = httpRequest customHeaders: [[name: 'X-JFrog-Art-Api', value: 'AKCp5ccGXKgp571DUjg7FfjTru6n8DyEygjrGCkV5JHgjwBYYnzsyRPFuu8g5v244TdnoXbS4'],[name: 'content-type', value: 'text/plain']], httpMode: 'POST', requestBody: 'items.find({"repo":{"$match":"libs-*-local"},"path":{"$match":"com/geekcap/vmturbo/hello-world-servlet-example/*"},"name":{"$match":"*.war"}}).include("repo","name","path")', responseHandle: 'LEAVE_OPEN', url: 'http://artifactory:8081/artifactory/api/search/aql'
 //    def response = httpRequest customHeaders: [[name: 'X-JFrog-Art-Api', value: 'AKCp5ccGT2x3evLXvGmtUTVnUq3toYqx4SR3ZeVrdvTdkY4T56V8edN6kEnNJjvNkhWTf7nn4'],[name: 'content-type', value: 'text/plain']], httpMode: 'POST', requestBody: 'items.find({"repo":{"$match":"libs-*-local"},"path":{"$match":"com/geekcap/vmturbo/hello-world-servlet-example/*"},"name":{"$match":"*.war"}}).include("repo","name","path")', responseHandle: 'LEAVE_OPEN', url: 'http://artifactory:8081/artifactory/api/search/aql'

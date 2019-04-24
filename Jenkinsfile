@@ -9,7 +9,7 @@ import groovy.json.JsonSlurper
 pipeline {
     agent any
     parameters {
-        choice(choices: findRelease(), description: 'Choise artifact', name: 'release')
+        choice(choices: json, description: 'Choise artifact', name: 'release')
     } 
 /*    triggers {
               pollSCM '* * * * *'

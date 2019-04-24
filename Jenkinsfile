@@ -20,6 +20,21 @@ pipeline {
                 git branch: 'master', url: "https://github.com/KostivAndrii/hello-world-servlet.git"
             }
         }
+        stage("Gather Deployment Parameters") {
+            steps {
+                timeout(time: 30, unit: 'SECONDS') {
+                    script {
+                        // Show the select input modal
+                       def INPUT_PARAMS = input message: 'Please Provide Parameters', ok: 'Next',
+                                        parameters: [
+                                        choice(name: 'ENVIRONMENT', choices: ['dev','qa'].join('\n'), description: 'Please select the Environment'),
+                                        choice(name: 'release', choices: findRelease(), description: 'Choise artifact')]
+                        env.ENVIRONMENT = INPUT_PARAMS.ENVIRONMENT
+                        env.release = INPUT_PARAMS.release
+                    }
+                }
+            }
+        }        
         stage ('Artifactory configuration') {
             steps {
                 rtServer (

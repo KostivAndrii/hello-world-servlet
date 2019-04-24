@@ -15,11 +15,11 @@ pipeline {
               pollSCM '* * * * *'
     }*/
     stages {
-        stage ('Clone') {
+/*        stage ('Clone') {
             steps {
                 git branch: 'master', url: "https://github.com/KostivAndrii/hello-world-servlet.git"
             }
-        }
+        } */
         stage("Gather Deployment Parameters") {
             steps {
                 timeout(time: 30, unit: 'SECONDS') {

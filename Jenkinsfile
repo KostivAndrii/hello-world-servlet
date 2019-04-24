@@ -8,9 +8,9 @@ def findRelease() {
 }
 pipeline {
     agent any
-    parameters {
+/*    parameters {
         choice(choices: findRelease(), description: 'Choise artifact', name: 'release')
-    }
+    } */
 /*    triggers {
               pollSCM '* * * * *'
     }*/

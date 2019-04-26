@@ -25,13 +25,13 @@ fi
 
 rm -f hello-world.war
 
-curl http://artifactory:8081/artifactory/libs-snapshot-local/com/geekcap/vmturbo/hello-world-servlet-example/1.3-SNAPSHOT/hello-world-servlet-example-1.3-20190417.074435-1.war > hello-world.war
+curl $url > hello-world.war
 
 #wget $url
 
 #echo 'url ' $url
 
-#rm -rf $ssh_key
+rm -rf $ssh_key
 
 aws ec2 create-key-pair --key-name $aws_key_name --query 'KeyMaterial' --output text 2>&1 | tee $ssh_key
 echo "Setting permissions for ssh key $ssh_key"

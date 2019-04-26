@@ -95,12 +95,13 @@ pipeline {
             }
         }
         stage ('Deploy AWS') {
-            when { expression { return params.DRY_RUN != 'No' } }
+            when { expression { return params.DRY_RUN == 'No' } }
                 steps {
                     echo 'Hello, AWS'
+                    sh "printenv | sort"
                     sh 'pwd'
                     sh 'ls -la'
-                    sh './aws_ec2.sh ${params.release}'
+                    sh './aws_ec2.sh ${release}'
                 }
         }      
     }

@@ -102,10 +102,7 @@
     path: "{{ tomcat_dest}}/webapps/{{ item }}"
     state: absent
   loop: [ docs, examples, host-manager ]
-<<<<<<< HEAD
-=======
 #  loop: [ docs, examples, host-manager, ROOT ]
->>>>>>> 998e9dbd7b42426a9b1720db26497e95f01c73e4
 
 - name: start & enable tomcat
   service: name=tomcat state=started enabled=yes

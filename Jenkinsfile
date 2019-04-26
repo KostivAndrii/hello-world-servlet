@@ -23,6 +23,7 @@ pipeline {
     stages {
         stage ('Clone') {
             steps {
+                echo "after assign *${env.DRY_RUN}*"                
                 git branch: 'master', url: "https://github.com/KostivAndrii/hello-world-servlet.git"
             }
         } 
@@ -94,12 +95,12 @@ pipeline {
             }
         }
         stage ('Deploy AWS') {
-            when { expression { return env.DRY_RUN != 'No' } }
+            when { expression { return params.DRY_RUN != 'No' } }
                 steps {
                     echo 'Hello, AWS'
                     sh 'pwd'
                     sh 'ls -la'
-                    sh './aws_ec2.sh ${release}'
+                    sh './aws_ec2.sh ${params.release}'
                 }
         }      
     }

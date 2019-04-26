@@ -1,17 +1,21 @@
 import groovy.json.JsonSlurper
-//def findRelease() {
 
-    def response = httpRequest customHeaders: [[name: 'X-JFrog-Art-Api', value: 'AKCp5ccGXKgp571DUjg7FfjTru6n8DyEygjrGCkV5JHgjwBYYnzsyRPFuu8g5v244TdnoXbS4'],[name: 'content-type', value: 'text/plain']], httpMode: 'POST', requestBody: 'items.find({"repo":{"$match":"libs-*-local"},"path":{"$match":"com/geekcap/vmturbo/hello-world-servlet-example/*"},"name":{"$match":"*.war"}}).include("repo","name","path")', responseHandle: 'LEAVE_OPEN', url: 'http://artifactory:8081/artifactory/api/search/aql'
-//    def response = httpRequest customHeaders: [[name: 'X-JFrog-Art-Api', value: 'AKCp5ccGT2x3evLXvGmtUTVnUq3toYqx4SR3ZeVrdvTdkY4T56V8edN6kEnNJjvNkhWTf7nn4'],[name: 'content-type', value: 'text/plain']], httpMode: 'POST', requestBody: 'items.find({"repo":{"$match":"libs-*-local"},"path":{"$match":"com/geekcap/vmturbo/hello-world-servlet-example/*"},"name":{"$match":"*.war"}}).include("repo","name","path")', responseHandle: 'LEAVE_OPEN', url: 'http://artifactory:8081/artifactory/api/search/aql'
-//    def response = httpRequest customHeaders: [[name: 'X-JFrog-Art-Api', value: 'AKCp5ccGT2x3evLXvGmtUTVnUq3toYqx4SR3ZeVrdvTdkY4T56V8edN6kEnNJjvNkhWTf7nn4'],[name: 'content-type', value: 'text/plain']], httpMode: 'POST', requestBody: 'items.find({"repo":{"$match":"libs-*-local"},"path":{"$match":"com/geekcap/vmturbo/hello-world-servlet-example/*"},"name":{"$match":"*.war"}}).include("repo","name","path")', responseHandle: 'LEAVE_OPEN', url: 'http://artifactory:8081/artifactory/api/search/aql'
+def getBuildVersion() {
+
+    final API_KEY = 'AKCp5ccGXKgp571DUjg7FfjTru6n8DyEygjrGCkV5JHgjwBYYnzsyRPFuu8g5v244TdnoXbS4'
+//    final API_KEY = 'AKCp5ccGT2x3evLXvGmtUTVnUq3toYqx4SR3ZeVrdvTdkY4T56V8edN6kEnNJjvNkhWTf7nn4'
+
+    def response = httpRequest customHeaders: [[name: 'X-JFrog-Art-Api', value: "${API_KEY}"],[name: 'content-type', value: 'text/plain']], httpMode: 'POST', requestBody: 'items.find({"repo":{"$match":"libs-*-local"},"path":{"$match":"com/geekcap/vmturbo/hello-world-servlet-example/*"},"name":{"$match":"*.war"}}).include("repo","name","path")', responseHandle: 'LEAVE_OPEN', url: 'http://artifactory:8081/artifactory/api/search/aql'
     def json = new JsonSlurper().parseText(response.content).results.name
     json.add("latest-RELEASE")
     json.add("latest-SNAPSHOT")
-//}
+    return json
+}
 pipeline {
     agent any
     parameters {
-        choice(choices: json, description: 'Choise artifact', name: 'release')
+        choice(choices: getBuildVersion(), description: 'Choise artifact', name: 'release')
+        choice(name: 'DRY_RUN', choices: 'Yes\nNo', description: 'Do a dry run to grab parameters?')
     } 
 /*    triggers {
               pollSCM '* * * * *'
@@ -58,7 +62,7 @@ pipeline {
                 )
             }
         }
-        stage ('Exec Maven') {
+/*        stage ('Exec Maven') {
             steps {
                 rtMavenRun (
                     tool: "MAVEN_TOOL", // Tool name from Jenkins configuration
@@ -82,7 +86,7 @@ pipeline {
                     serverId: "ARTIFACTORY_SERVER"
                 )
             }
-        }
+        } */
         stage ('Download war from artifactory') {
             steps {
                 echo 'Download war from artifactory'
@@ -90,12 +94,13 @@ pipeline {
             }
         }
         stage ('Deploy AWS') {
-            steps {
-                echo 'Hello, AWS'
-                sh 'pwd'
-                sh 'ls -la'
-                sh './aws_ec2.sh ${release}'
-            }
+            when { expression { return env.DRY_RUN != 'No' } }
+                steps {
+                    echo 'Hello, AWS'
+                    sh 'pwd'
+                    sh 'ls -la'
+                    sh './aws_ec2.sh ${release}'
+                }
         }      
     }
 }

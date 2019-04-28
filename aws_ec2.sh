@@ -77,7 +77,7 @@ echo "IP " $ec2_IP
 #scp -o "StrictHostKeyChecking no" -i $ssh_key ./target/helloworld.war ec2-user@$ec2_IP:/home/ec2-user
 scp -o "StrictHostKeyChecking no" -i $ssh_key ./hello-world.war ec2-user@$ec2_IP:/home/ec2-user
 
-ansible-playbook --key-file aws-test-oregon.pem -i ./inventory/ec2.py -u ec2-user --limit "tag_VM_Tomcat" tomcat.yml
+## ansible-playbook --key-file aws-test-oregon.pem -i ./inventory/ec2.py -u ec2-user --limit "tag_VM_Tomcat" tomcat.yml
 
 #aws cloudformation delete-stack --stack-name PROD
 #ssh -o "StrictHostKeyChecking no" -i aws-test-key.pem ec2-user@$ec2_IP

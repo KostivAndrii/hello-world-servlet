@@ -32,6 +32,6 @@ done
 ec2_IP=$(aws ec2 describe-instances --query "Reservations[*].Instances[*].PublicIpAddress" --output=text --filter Name=tag:VM,Values=Tomcat)
 echo "IP " $ec2_IP
 
-export ANSIBLE_HOST_KEY_CHECKING=False
-ansible-playbook --key-file aws-test-oregon.pem -i ./inventory/ec2.py -u ec2-user --limit "tag_VM_Tomcat" tomcat.yml
+##export ANSIBLE_HOST_KEY_CHECKING=False
+##ansible-playbook --key-file aws-test-oregon.pem -i ./inventory/ec2.py -u ec2-user --limit "tag_VM_Tomcat" tomcat.yml
 #set +x

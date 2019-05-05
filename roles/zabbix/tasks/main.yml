@@ -70,6 +70,14 @@
       DBHost=localhost
       DBPassword=1UIhjIgovdckR5m4OWri$
 
+- name: coping /etc/zabbix/web/zabbix.conf.php
+  copy:
+    src: zabbix.conf.php
+    dest: /etc/zabbix/web/
+    owner: apache
+    group: apache
+    mode: 0644
+
 - name: Start the httpd service
   service:
     name: httpd

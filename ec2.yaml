@@ -74,7 +74,7 @@ Resources:
   TomcatServer:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019125tbJ-tomcat-v.2.6m6lx1w8efh
+      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019125JeG-tomcat-v.2.7pb2o2o3tm8b
 #      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019125kAE-tomcat-v.2.505yv0c5q8k6q
       TimeoutInMinutes: '60'
       Parameters:

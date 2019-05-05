@@ -94,7 +94,7 @@ Resources:
     Type: 'AWS::EC2::InternetGateway'
     Properties: {}
 
-Outputs:
+#Outputs:
 #  PublicIP:
 #    Description: Public IP address of the newly created EC2 instance
 #    Value: !GetAtt

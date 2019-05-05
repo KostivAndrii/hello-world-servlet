@@ -7,22 +7,27 @@ Parameters:
     Type: 'AWS::EC2::KeyPair::KeyName'
     Default: '1'
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
+
 Resources:
+
   VPC:
     Type: 'AWS::EC2::VPC'
     Properties:
       EnableDnsSupport: 'true'
       EnableDnsHostnames: 'true'
       CidrBlock: 10.0.0.0/16
+
   PublicSubnet:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 10.0.0.0/24
+
   PublicRouteTables:
     Type: 'AWS::EC2::RouteTable'
     Properties:
       VpcId: !Ref VPC
+
   PublicRoute:
     Type: 'AWS::EC2::Route'
     Properties:
@@ -31,6 +36,7 @@ Resources:
       GatewayId: !Ref InternetGateway
     DependsOn:
       - EC2VPCG4UI66
+
   TomcatSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -49,44 +55,45 @@ Resources:
           FromPort: '22'
           ToPort: '22'
           CidrIp: 0.0.0.0/0
+
   EC2SRTA2KT4E:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Properties:
       RouteTableId: !Ref PublicRouteTables
       SubnetId: !Ref PublicSubnet
-  TomcatInstance:
-    Type: 'AWS::EC2::Instance'
-    Properties:
-      InstanceType: t2.micro
-      ImageId: !FindInMap
-        - RegionMap
-        - !Ref 'AWS::Region'
-        - AMI
-      KeyName: !Ref KeyName
-      Tags:
-        - Key: VM
-          Value: Tomcat
-#      ImageId: !FindInMap [RegionMap, !Ref 'AWS::Region', AMI]
+
+#  TomcatInstance:
+#    Type: 'AWS::EC2::Instance'
+#    Properties:
+#      InstanceType: t2.micro
+#      ImageId: !FindInMap
+#        - RegionMap
+#        - !Ref 'AWS::Region'
+#        - AMI
 #      KeyName: !Ref KeyName
-#oregon      ImageId: ami-076e276d85f524150
-#      KeyName: aws-test-oregon
-      NetworkInterfaces:
-        - GroupSet:
-            - !Ref TomcatSecurityGroup
-          AssociatePublicIpAddress: 'true'
-          DeviceIndex: '0'
-          DeleteOnTermination: 'true'
-          SubnetId: !Ref PublicSubnet
-    DependsOn:
-      - PublicRoute
+#      Tags:
+#        - Key: VM
+#          Value: Tomcat
+#      NetworkInterfaces:
+#        - GroupSet:
+#            - !Ref TomcatSecurityGroup
+#          AssociatePublicIpAddress: 'true'
+#          DeviceIndex: '0'
+#          DeleteOnTermination: 'true'
+#          SubnetId: !Ref PublicSubnet
+#    DependsOn:
+#      - PublicRoute
+
   EC2VPCG4UI66:
     Type: 'AWS::EC2::VPCGatewayAttachment'
     Properties:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
+
   InternetGateway:
     Type: 'AWS::EC2::InternetGateway'
     Properties: {}
+
 Outputs:
   PublicIP:
     Description: Public IP address of the newly created EC2 instance

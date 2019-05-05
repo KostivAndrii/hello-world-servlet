@@ -74,7 +74,7 @@ Resources:
   TomcatServer:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019125wvJ-tomcat-v.2.6ksriz12vsz
+      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019125tbJ-tomcat-v.2.6m6lx1w8efh
 #      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019125kAE-tomcat-v.2.505yv0c5q8k6q
       TimeoutInMinutes: '60'
       Parameters:
@@ -90,10 +90,16 @@ Resources:
 Outputs:
   StackRef:
      Value: !Ref TomcatServer
-  PublicIP:
+  TomcatPublicIP:
      Value: !GetAtt TomcatServer.Outputs.PublicIP
-  OutputfromNestedStackPublicDNS:
+  TomcatPublicDNS:
      Value: !GetAtt TomcatServer.Outputs.PublicDNS
-  Output1fromNestedStack:
+  TomcatInstanceId:
      Value: !GetAtt TomcatServer.Outputs.InstanceId
+  ZabbixPublicIP:
+     Value: !GetAtt TomcatServer.Outputs.ZabbixPublicIP
+  ZabbixPublicDNS:
+     Value: !GetAtt TomcatServer.Outputs.ZabbixPublicDNS
+  ZabbixInstanceId:
+     Value: !GetAtt TomcatServer.Outputs.ZabbixInstanceId
      

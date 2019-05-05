@@ -89,8 +89,10 @@ Resources:
 Outputs:
   StackRef:
      Value: !Ref TomcatServer
-  OutputfromNestedStack:
+  OutputfromNestedStack_PublicIP:
      Value: !GetAtt TomcatServer.Outputs.PublicIP
+  OutputfromNestedStack_PublicDNS:
      Value: !GetAtt TomcatServer.Outputs.PublicDNS
+  OutputfromNestedStack_InstanceId:
      Value: !GetAtt TomcatServer.Outputs.InstanceId
      

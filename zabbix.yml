@@ -1,0 +1,6 @@
+---
+- hosts: tag_VM_Zabbix
+  become: yes
+  gather_facts: true
+  roles:
+    - zabbix

@@ -95,19 +95,19 @@ Resources:
     Properties: {}
 
 Outputs:
-  PublicIP:
-    Description: Public IP address of the newly created EC2 instance
-    Value: !GetAtt
-      - TomcatInstance
-      - PublicIp
-  PublicDNS:
-    Description: Public DNSName of the newly created EC2 instance
-    Value: !GetAtt
-      - TomcatInstance
-      - PublicDnsName
-  InstanceId:
-    Description: InstanceId of the newly created EC2 instance
-    Value: !Ref TomcatInstance
+#  PublicIP:
+#    Description: Public IP address of the newly created EC2 instance
+#    Value: !GetAtt
+#      - TomcatInstance
+#      - PublicIp
+#  PublicDNS:
+#    Description: Public DNSName of the newly created EC2 instance
+#    Value: !GetAtt
+#      - TomcatInstance
+#      - PublicDnsName
+#  InstanceId:
+#    Description: InstanceId of the newly created EC2 instance
+#    Value: !Ref TomcatInstance
 Mappings:
   RegionMap:
     'ap-south-1':

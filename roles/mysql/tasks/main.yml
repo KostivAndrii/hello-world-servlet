@@ -1,7 +1,8 @@
 ---
 # tasks file for mysql
 - set_fact:
-    mysql_password: "{{ pwd_alias }}$My1#"
+    mysql_password: "3zdrLVM8Kf445ILHBlbI#"
+    # mysql_password: "{{ pwd_alias }}$My1#"
 
 - set_fact:
     mysql_user_password: "1UIhjIgovdckR5m4OWri$My1#"

@@ -31,6 +31,9 @@
     state: started
     enabled: true
 
+- debug:
+    msg:"root password {{ mysql_password }} user password {{ mysql_user_password }}"
+
 - name: Change mysql root password and keep track in and store it in /root/.my.cnf
   shell: |
     password_match=`awk '/A temporary password is generated for/ { print $NF }' /var/log/mysqld.log`

@@ -1,0 +1,25 @@
+node {
+    def server = Artifactory.newServer url: 'http://192.168.237.125:8081/artifactory', credentialsId: 'Artifactory_user'
+    def rtMaven = Artifactory.newMavenBuild()
+    def buildInfo = Artifactory.newBuildInfo()
+/*    def buildInfo 
+    def triggers = pollSCM('* * * * *')
+    buildInfo.env.capture = true */
+
+    stage ('Clone') {
+        git branch: 'develop', url: "https://github.com/KostivAndrii/hello-world-servlet.git"
+    }
+    stage ('Artifactory configuration') {
+        rtMaven.tool = 'MAVEN_TOOL' // Tool name from Jenkins configuration
+/*        rtMaven.deployer releaseRepo: 'hello_world_release', snapshotRepo: 'hello_world_snapshot', server: server*/
+        rtMaven.deployer releaseRepo: 'libs-release-local', snapshotRepo: 'libs-snapshot-local', server: server
+        rtMaven.resolver releaseRepo: 'libs-release', snapshotRepo: 'libs-snapshot', server: server
+        buildInfo = Artifactory.newBuildInfo()
+    }
+    stage ('Exec Maven') {
+        rtMaven.run pom: 'pom.xml', goals: 'clean install', buildInfo: buildInfo
+    }
+    stage ('Publish build info') {
+        server.publishBuildInfo buildInfo
+    }
+}

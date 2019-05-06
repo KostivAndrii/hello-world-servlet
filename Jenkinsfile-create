@@ -1,0 +1,71 @@
+pipeline {
+    agent any
+    environment {
+        aws_key_name = 'aws-test-oregon'
+    }
+    stages {
+        stage ('Clone') {
+            steps {
+                git branch: 'master', url: "https://github.com/KostivAndrii/hello-world-servlet.git"
+            }
+        } 
+        stage ('Create AWS') {
+            steps {
+                echo 'Creating environment in AWS and CM Tomcat there'
+                sh 'pwd'
+                sh 'ls -la'
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
+                  sh 'aws cloudformation create-stack --stack-name PROD --template-body file://./ec2.yaml --parameters ParameterKey=KeyName,ParameterValue=$aws_key_name'
+                }
+//                sh 'sleep 120'
+                timeout(5) {
+                    waitUntil {
+                       withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
+                           script {
+                             def StackStatus = sh (
+                                    label: 'GET_STACK_STATUS', 
+                                    returnStdout: true, 
+                                    script: 'aws cloudformation describe-stacks --query "Stacks[*].StackStatus" --output=text --stack-name PROD').trim()
+//                             def StackStatus = sh script: 'aws cloudformation describe-stacks --query "Stacks[*].StackStatus" --output=text --stack-name PROD', returnStatus: true
+                             echo StackStatus
+                             return (StackStatus == 'CREATE_COMPLETE');
+                           }
+                       }
+                    }
+                }                
+//                waitUntil {    // some block }
+//                sh './aws_create.sh'
+            }
+        }      
+        stage ('Launching Ansible with dynamic inventory') {
+            steps {
+                echo 'Appying CM'
+                sh 'pwd'
+                sh 'ls -la'
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
+                    ansiblePlaybook (
+                        colorized: true, 
+                        credentialsId: 'aws-test-oregon', 
+                        disableHostKeyChecking: true, 
+                        installation: 'Ansible', 
+                        inventory: './inventory/ec2.py', 
+                        limit: 'tag_VM_Tomcat', 
+                        playbook: './tomcat.yml'
+                    )
+                }
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
+                    ansiblePlaybook (
+                        colorized: true, 
+                        credentialsId: 'aws-test-oregon', 
+                        disableHostKeyChecking: true, 
+                        installation: 'Ansible', 
+                        inventory: './inventory/ec2.py', 
+                        limit: 'tag_VM_Zabbix', 
+                        playbook: './zabbix.yml'
+                    )
+                }
+            }
+        }      
+    }
+}
+

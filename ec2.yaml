@@ -84,7 +84,7 @@ Resources:
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
       RouteTableId: !Ref PrivatRouteTables
-      GatewayId: !Ref NATGWInstance
+      GatewayId: !Ref InternetGateway
     DependsOn:
       - GatewayAttachmentInternet
 

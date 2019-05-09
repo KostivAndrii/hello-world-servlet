@@ -84,7 +84,7 @@ Resources:
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
       RouteTableId: !Ref PrivatRouteTables
-      GatewayId: !Ref InternetGateway
+      GatewayId: !Ref NATGWInstance
     DependsOn:
       - GatewayAttachmentInternet
 
@@ -161,6 +161,19 @@ Resources:
       - PublicRoute
 
 Outputs:
+  NATGWIP:
+    Description: Public IP address of the newly created EC2 instance
+    Value: !GetAtt 
+      - NATGWInstance
+      - PublicIp
+  NATGWDNS:
+    Description: Public DNSName of the newly created EC2 instance
+    Value: !GetAtt 
+      - NATGWInstance
+      - PublicDnsName
+  NATGWInstanceId:
+    Description: InstanceId of the newly created EC2 instance
+    Value: !Ref NATGWInstance
   StackRef:
      Value: !Ref PublicServer
   TomcatPublicIP:

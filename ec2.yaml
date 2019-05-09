@@ -1,6 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
+  Environment:
+    Type: String
+    Default: "PROD"
   KeyName:
     Description: 'Optional key pair of the ec2-user to establish a SSH connection to the EC2 instance.'
     Type: 'AWS::EC2::KeyPair::KeyName'
@@ -92,36 +95,18 @@ Resources:
       RouteTableId: !Ref PrivatRouteTables
       SubnetId: !Ref PrivatSubnet
 
-  TomcatSecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
-    Properties:
-      VpcId: !Ref VPC
-      GroupDescription: Allow access from HTTP and SSH traffic
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: '80'
-          ToPort: '80'
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: '8080'
-          ToPort: '8080'
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: '22'
-          ToPort: '22'
-          CidrIp: 0.0.0.0/0
+#====== Nested STECK with PublicServers (FrontEnd)
 
-  TomcatServer:
+  PublicServer:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019125JeG-tomcat-v.2.7pb2o2o3tm8b
-#      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019125kAE-tomcat-v.2.505yv0c5q8k6q
+      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019129hlN-tomcat-v.2.9ms7h2wmbvd8
       TimeoutInMinutes: '60'
       Parameters:
         KeyName:
           Ref: KeyName
-        TomcatSecurityGroup:
-          Ref: TomcatSecurityGroup
+        VPC:
+          Ref: VPC
         PublicSubnet:
           Ref: PublicSubnet
     DependsOn:
@@ -129,17 +114,17 @@ Resources:
 
 Outputs:
   StackRef:
-     Value: !Ref TomcatServer
+     Value: !Ref PublicServer
   TomcatPublicIP:
-     Value: !GetAtt TomcatServer.Outputs.PublicIP
+     Value: !GetAtt PublicServer.Outputs.PublicIP
   TomcatPublicDNS:
-     Value: !GetAtt TomcatServer.Outputs.PublicDNS
+     Value: !GetAtt PublicServer.Outputs.PublicDNS
   TomcatInstanceId:
-     Value: !GetAtt TomcatServer.Outputs.InstanceId
+     Value: !GetAtt PublicServer.Outputs.InstanceId
   ZabbixPublicIP:
-     Value: !GetAtt TomcatServer.Outputs.ZabbixPublicIP
+     Value: !GetAtt PublicServer.Outputs.ZabbixPublicIP
   ZabbixPublicDNS:
-     Value: !GetAtt TomcatServer.Outputs.ZabbixPublicDNS
+     Value: !GetAtt PublicServer.Outputs.ZabbixPublicDNS
   ZabbixInstanceId:
-     Value: !GetAtt TomcatServer.Outputs.ZabbixInstanceId
+     Value: !GetAtt PublicServer.Outputs.ZabbixInstanceId
      

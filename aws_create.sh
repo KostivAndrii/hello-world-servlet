@@ -17,7 +17,7 @@ aws cloudformation create-stack --stack-name PROD --template-body file://./ec2.y
 echo "Creating instance ..."
 
 StackStatus=""
-temp_cnt=120
+temp_cnt=300
 
 #while [[( "$StackStatus" != "CREATE_COMPLETE" ) && ( $temp_cnt -ne 0 )]];
 while [[( "$StackStatus" != CREATE_COMPLETE ) && ( $temp_cnt -ne 0 )]];

@@ -119,6 +119,7 @@ Resources:
         - !Ref 'AWS::Region'
         - AMI
       KeyName: !Ref KeyName
+      SourceDestCheck: false
       Tags:
         - Key: VM
           Value: NATGW

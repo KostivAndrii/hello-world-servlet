@@ -1,18 +1,12 @@
 ---
 # tasks file for mysql
 - set_fact:
-    mysql_password: "3zdrLVM8Kf445ILHBlbI#"
-    # mysql_password: "{{ pwd_alias }}$My1#"
+    mysql_password: "{{ pwd_alias }}$"
 
 - set_fact:
-    mysql_user_password: "1UIhjIgovdckR5m4OWri$My1#"
+    mysql_user_password: "1UIhjIgovdckR5m4OWri$"
     # mysql_user_password: "{{ pwd_alias_u }}$"
 
-- debug:
-    var: mysql_password
-    
-- debug:
-    var: mysql_user_password
 
 - name: Create instalation folder
   file:
@@ -36,9 +30,6 @@
     name: mysqld
     state: started
     enabled: true
-
-- debug:
-    msg: "root password {{ mysql_password }} user password {{ mysql_user_password }}"
 
 - name: Change mysql root password and keep track in and store it in /root/.my.cnf
   shell: |

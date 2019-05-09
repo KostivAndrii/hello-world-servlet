@@ -16,17 +16,33 @@ Resources:
       EnableDnsHostnames: 'true'
       CidrBlock: 10.0.0.0/16
 
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties: {}
+
+  GatewayAttachmentInternet:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+#==================================================== Public Subnet =========	  
   PublicSubnet:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 10.0.0.0/24
 
+#====== Public RouteTables =========	  
   PublicRouteTables:
     Type: 'AWS::EC2::RouteTable'
     Properties:
       VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Join [ " ", [ !Ref Environment, "PublicRouteTables" ] ]
 
+#======= Routes for Public Subnet RouteTables with IGW 
   PublicRoute:
     Type: 'AWS::EC2::Route'
     Properties:
@@ -34,7 +50,47 @@ Resources:
       RouteTableId: !Ref PublicRouteTables
       GatewayId: !Ref InternetGateway
     DependsOn:
-      - EC2VPCG4UI66
+      - GatewayAttachmentInternet
+
+#====== Associate Public Route for Public Subnets
+  RouteAssociationPublicSubnet:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref PublicRouteTables
+      SubnetId: !Ref PublicSubnet
+
+#==================================================== Privat Subnet =========	  
+  PrivatSubnet:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.10.0/24
+
+#====== Privat RouteTables =========	  
+  PrivatRouteTables:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Join [ " ", [ !Ref Environment, "PrivatRouteTables" ] ]
+
+#======= Routes for Privat Subnet RouteTables with IGW 
+  PrivatRoute:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      RouteTableId: !Ref PrivatRouteTables
+      GatewayId: !Ref InternetGateway
+    DependsOn:
+      - GatewayAttachmentInternet
+
+#====== Associate Privat Route for Public Subnets
+  RouteAssociationPrivatSubnet:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref PrivatRouteTables
+      SubnetId: !Ref PrivatSubnet
 
   TomcatSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
@@ -55,22 +111,6 @@ Resources:
           ToPort: '22'
           CidrIp: 0.0.0.0/0
 
-  EC2SRTA2KT4E:
-    Type: 'AWS::EC2::SubnetRouteTableAssociation'
-    Properties:
-      RouteTableId: !Ref PublicRouteTables
-      SubnetId: !Ref PublicSubnet
-
-  EC2VPCG4UI66:
-    Type: 'AWS::EC2::VPCGatewayAttachment'
-    Properties:
-      VpcId: !Ref VPC
-      InternetGatewayId: !Ref InternetGateway
-
-  InternetGateway:
-    Type: 'AWS::EC2::InternetGateway'
-    Properties: {}
-    
   TomcatServer:
     Type: AWS::CloudFormation::Stack
     Properties:

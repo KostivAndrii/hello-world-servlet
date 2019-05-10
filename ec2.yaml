@@ -181,6 +181,28 @@ Resources:
     DependsOn:
       - PublicRoute
 
+  PrivatInstance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      InstanceType: t2.micro
+      ImageId: !FindInMap
+        - RegionMap
+        - !Ref 'AWS::Region'
+        - AMI
+      KeyName: !Ref KeyName
+      Tags:
+        - Key: VM
+          Value: BackEnd
+        - Key: Name
+          Value: !Join [ " ", [ !Ref Environment, "BackEnd" ] ]
+      NetworkInterfaces:
+        - GroupSet:
+            - !Ref NATGWSecurityGroup
+          DeviceIndex: '0'
+          DeleteOnTermination: 'true'
+          SubnetId: !Ref PrivatSubnet
+
+
 Outputs:
   NATGWIP:
     Description: Public IP address of the newly created EC2 instance

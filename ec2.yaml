@@ -122,6 +122,9 @@ Resources:
           FromPort: '22'
           ToPort: '22'
           CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Join [ " ", [ !Ref Environment, "NATGWSecurityGroup" ] ]
 
 #====== NAT GW instance
   NATGWInstance:
@@ -135,7 +138,7 @@ Resources:
       KeyName: !Ref KeyName
       SourceDestCheck: false
       Tags:
-        - Key: VM
+        - Key: Name
           Value: NATGW
       NetworkInterfaces:
         - GroupSet:
@@ -163,9 +166,12 @@ Resources:
   PublicServer:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019129hlN-tomcat-v.2.9ms7h2wmbvd8
+      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019130gbO-tomcat-v.2.10707fbktewwf
+#      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019129hlN-tomcat-v.2.9ms7h2wmbvd8
       TimeoutInMinutes: '60'
       Parameters:
+        Environment:
+          Ref: Environment
         KeyName:
           Ref: KeyName
         VPC:

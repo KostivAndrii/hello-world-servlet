@@ -1,13 +1,9 @@
 pipeline {
     agent any
-    parameters {
-      string(defaultValue: "TEST", description: 'What environment?', name: 'aws_env')
-    }    
     stages {
         stage ('destroy AWS env. PROD') {
             steps {
                 echo 'Destroying  environment in AWS and CM Tomcat there'
-                echo 'Create AWS env '${params.aws_env}"
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
                   sh 'aws cloudformation delete-stack --stack-name PROD'
                 }

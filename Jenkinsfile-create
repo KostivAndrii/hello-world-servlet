@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    parameters {
+      string(defaultValue: "STAGE", description: 'What environment?', name: 'AWS_ENV')
+    }        
     environment {
         aws_key_name = 'aws-test-oregon'
     }
@@ -15,7 +18,7 @@ pipeline {
                 sh 'pwd'
                 sh 'ls -la'
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
-                  sh 'aws cloudformation create-stack --stack-name PROD --template-body file://./ec2.yaml --parameters ParameterKey=KeyName,ParameterValue=$aws_key_name ParameterKey=Environment,ParameterValue=TOMCAT'
+                  sh 'aws cloudformation create-stack --stack-name PROD --template-body file://./ec2.yaml --parameters ParameterKey=KeyName,ParameterValue=$aws_key_name ParameterKey=Environment,ParameterValue=${AWS_ENV}'
                 }
 //                sh 'sleep 120'
                 timeout(5) {

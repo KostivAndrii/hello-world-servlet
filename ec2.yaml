@@ -24,10 +24,10 @@ Resources:
 
   InternetGateway:
     Type: 'AWS::EC2::InternetGateway'
-    Properties: {}
-    Tags:
-      - Key: Name
-        Value: !Ref Environment
+    Properties: 
+      Tags:
+        - Key: Name
+          Value: !Ref Environment
 
   GatewayAttachmentInternet:
     Type: 'AWS::EC2::VPCGatewayAttachment'

@@ -18,10 +18,16 @@ Resources:
       EnableDnsSupport: 'true'
       EnableDnsHostnames: 'true'
       CidrBlock: 10.0.0.0/16
+      Tags:
+        - Key: Name
+          Value: !Ref Environment
 
   InternetGateway:
     Type: 'AWS::EC2::InternetGateway'
     Properties: {}
+    Tags:
+      - Key: Name
+        Value: !Ref Environment
 
   GatewayAttachmentInternet:
     Type: 'AWS::EC2::VPCGatewayAttachment'
@@ -35,6 +41,9 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 10.0.0.0/24
+      Tags:
+        - Key: Name
+          Value: !Join [ " ", [ !Ref Environment, "PublicSubnet" ] ]
 
 #====== Public RouteTables =========	  
   PublicRouteTables:
@@ -68,6 +77,9 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 10.0.10.0/24
+      Tags:
+        - Key: Name
+          Value: !Join [ " ", [ !Ref Environment, "PrivatSubnet" ] ]
 
 #====== Privat RouteTables =========	  
   PrivatRouteTables:
@@ -84,9 +96,11 @@ Resources:
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
       RouteTableId: !Ref PrivatRouteTables
-      GatewayId: !Ref InternetGateway
+#      GatewayId: !Ref InternetGateway
+      InstanceId: !Ref NATGWInstance
     DependsOn:
-      - GatewayAttachmentInternet
+#      - GatewayAttachmentInternet
+      - NATGWInstance
 
 #====== Associate Privat Route for Public Subnets
   RouteAssociationPrivatSubnet:

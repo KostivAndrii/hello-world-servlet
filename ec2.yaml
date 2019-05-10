@@ -139,7 +139,7 @@ Resources:
       SourceDestCheck: false
       Tags:
         - Key: Name
-          Value: NATGW
+          Value: !Join [ " ", [ !Ref Environment, "NATGW" ] ]          
       NetworkInterfaces:
         - GroupSet:
             - !Ref NATGWSecurityGroup

@@ -6,12 +6,6 @@
     name: java-1.8.0-openjdk
     state: present
 
-- debug: 
-    var: Zabbix_IP
-
-- debug:
-    msg: "zabbix_server_IP {{ Zabbix_IP }}"
-
 - name: Add group tomcat
   group: name={{ tomcat_user }} state=present
 

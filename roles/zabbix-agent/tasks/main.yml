@@ -1,6 +1,9 @@
 ---
 # tasks file for zabbix-agent
-
+- name: Disable SELinux
+  selinux:
+    state: disabled
+    
 - name: upgrade all packages
   yum:
     name: '*'

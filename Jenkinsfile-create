@@ -53,7 +53,7 @@ pipeline {
                         installation: 'Ansible', 
                         inventory: './inventory/ec2.py', 
                         limit: 'tag_VM_Tomcat:tag_VM_Zabbix', 
-#                        limit: 'tag_VM_Tomcat', 
+//                        limit: 'tag_VM_Tomcat', 
                         playbook: './site.yaml'
                     )
                 }

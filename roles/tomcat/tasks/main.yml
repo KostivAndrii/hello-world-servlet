@@ -7,11 +7,11 @@
     state: present
 
 - debug: 
-    var: zabbix_server_IP
+    var: Zabbix_IP
 
 - name: use zabbix_server_IP
   debug:
-    msg: "zabbix_server_IP {{ zabbix_server_IP }}"
+    msg: "zabbix_server_IP {{ Zabbix_IP }}"
 
 - name: Add group tomcat
   group: name={{ tomcat_user }} state=present

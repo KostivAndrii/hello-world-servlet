@@ -8,8 +8,6 @@
 - hosts: tag_VM_Tomcat
   become: yes
   gather_facts: true
-  vars:
-    Zabbix_IP: "{{ zabbix_server_IP }}"
   roles:
     - tomcat
     - zabbix-agent

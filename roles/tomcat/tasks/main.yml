@@ -9,8 +9,7 @@
 - debug: 
     var: Zabbix_IP
 
-- name: use zabbix_server_IP
-  debug:
+- debug:
     msg: "zabbix_server_IP {{ Zabbix_IP }}"
 
 - name: Add group tomcat

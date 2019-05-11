@@ -89,13 +89,13 @@
     group: "{{ tomcat_group }}"
     mode: 0600
 
-# - name: coping tomcat/bin/setenv.sh
-#   template:
-#     src: setenv.sh.j2
-#     dest: "{{ tomcat_dest }}/bin/setenv.sh"
-#     owner: "{{ tomcat_user }}"
-#     group: "{{ tomcat_group }}"
-#     mode: 0755
+ - name: coping tomcat/bin/setenv.sh
+   template:
+     src: setenv.sh.j2
+     dest: "{{ tomcat_dest }}/bin/setenv.sh"
+     owner: "{{ tomcat_user }}"
+     group: "{{ tomcat_group }}"
+     mode: 0755
 
 - name: "Delete folders {docs,examples,host-manager,ROOT}"
   file:

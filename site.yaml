@@ -1,4 +1,18 @@
 ---
+- hosts: tag_VM_Zabbix
+  become: yes
+  gather_facts: true
+  roles:
+    - zabbix
+
+- hosts: tag_VM_Zabbix
+  tasks:
+    - name: "Fix zabbix server IP"
+      set_fact:
+        zabbix_server_IP: "{{ ansible_default_ipv4.address }}"
+    - debug: 
+        var: zabbix_server_IP
+
 - hosts: tag_VM_Tomcat
   become: yes
   gather_facts: true
@@ -6,8 +20,3 @@
     - tomcat
     - zabbix-agent
 
-- hosts: tag_VM_Zabbix
-  become: yes
-  gather_facts: true
-  roles:
-    - zabbix

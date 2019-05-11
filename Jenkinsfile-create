@@ -52,11 +52,12 @@ pipeline {
                         disableHostKeyChecking: true, 
                         installation: 'Ansible', 
                         inventory: './inventory/ec2.py', 
-                        limit: 'tag_VM_Tomcat', 
-                        playbook: './tomcat.yml'
+                        limit: 'tag_VM_Tomcat:tag_VM_Zabbix', 
+#                        limit: 'tag_VM_Tomcat', 
+                        playbook: './site.yaml'
                     )
                 }
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
+/*                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
                     ansiblePlaybook (
                         colorized: true, 
                         credentialsId: 'aws-test-oregon', 
@@ -66,7 +67,7 @@ pipeline {
                         limit: 'tag_VM_Zabbix', 
                         playbook: './zabbix.yml'
                     )
-                }
+                } */
             }
         }      
     }

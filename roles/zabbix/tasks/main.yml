@@ -69,6 +69,9 @@
     block: |
       DBHost=localhost
       DBPassword=1UIhjIgovdckR5m4OWri$
+      JavaGateway={{ ansible_host }}
+      JavaGatewayPort=10052
+      StartJavaPollers=5
 
 - name: coping /etc/zabbix/web/zabbix.conf.php
   copy:
@@ -81,6 +84,12 @@
 - name: Start the httpd service
   service:
     name: httpd
+    state: started
+    enabled: true
+
+- name: Start the zabbix-java-gateway service
+  service:
+    name: zabbix-java-gateway
     state: started
     enabled: true
 

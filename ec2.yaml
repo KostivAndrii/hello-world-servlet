@@ -1,14 +1,57 @@
 AWSTemplateFormatVersion: 2010-09-09
 
+Metadata:
+ AWS::CloudFormation::Interface: 
+    ParameterGroups: 
+      - 
+        Label: 
+          default: "Network Configuration"
+        Parameters: 
+          - Environment
+          - VPCBlock
+      -
+        Label:
+          default: "Subnets CIDR Blocks"
+        Parameters:
+          - PublicSubnetCIDR
+          - PrivateSubnetCIDR
+          - NATGWInstanceTypeParameter
+      - 
+        Label: 
+          default: "SSH key"
+        Parameters: 
+          - KeyName
+
+
 Parameters:
   Environment:
     Type: String
     Default: "PROD"
+  VPCBlock:
+    Type: String
+    Default: '10.0.0.0/16'  
+
+  PublicSubnetCIDR: 
+    Type: String
+    Default: '10.0.10.0/24'
+    Description: "Public Subnet CIDR"
+  PrivateSubnetCIDR: 
+    Type: String
+    Default: '10.0.11.0/24'
+    Description: "Private Subnet CIDR"
+    
   KeyName:
     Description: 'Optional key pair of the ec2-user to establish a SSH connection to the EC2 instance.'
     Type: 'AWS::EC2::KeyPair::KeyName'
     Default: '1'
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
+
+  NATGWInstanceTypeParameter: 
+    Type: String
+    Default: t2.micro
+    AllowedValues: 
+      - t2.micro
+    Description: Enter Instance Type for NAT GateWay. Default is t2.micro.
 
 Resources:
 
@@ -17,7 +60,7 @@ Resources:
     Properties:
       EnableDnsSupport: 'true'
       EnableDnsHostnames: 'true'
-      CidrBlock: 10.0.0.0/16
+      CidrBlock: !Ref VPCBlock
       Tags:
         - Key: Name
           Value: !Ref Environment
@@ -40,7 +83,7 @@ Resources:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 10.0.0.0/24
+      CidrBlock: !Ref PublicSubnetCIDR
       Tags:
         - Key: Name
           Value: !Join [ " ", [ !Ref Environment, "PublicSubnet" ] ]
@@ -76,7 +119,7 @@ Resources:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 10.0.10.0/24
+      CidrBlock: !Ref PrivateSubnetCIDR
       Tags:
         - Key: Name
           Value: !Join [ " ", [ !Ref Environment, "PrivatSubnet" ] ]
@@ -130,7 +173,7 @@ Resources:
   NATGWInstance:
     Type: 'AWS::EC2::Instance'
     Properties:
-      InstanceType: t2.micro
+      InstanceType: !Ref NATGWInstanceTypeParameter
       ImageId: !FindInMap 
         - RegionMap
         - !Ref 'AWS::Region'
@@ -147,19 +190,14 @@ Resources:
           DeviceIndex: '0'
           DeleteOnTermination: 'true'
           SubnetId: !Ref PublicSubnet
-      UserData: !Base64 
-        'Fn::Join':
-          - ''
-          - - |
-              #!/bin/bash -xe
-            - |
-              sed -i "s/net.ipv4.ip_forward = 0/net.ipv4.ip_forward = 1/" /etc/sysctl.conf; 
-            - |
-              sysctl -p; 
-            - |
-              echo "iptables -t nat -A POSTROUTING -s 10.0.0.0/16 -j MASQUERADE" >> /etc/rc.local
-            - |
-              iptables -t nat -A POSTROUTING -s 10.0.0.0/16 -j MASQUERADE
+      UserData: 
+        Fn::Base64: 
+          !Sub | 
+            #!/bin/bash -xe 
+            sed -i "s/net.ipv4.ip_forward = 0/net.ipv4.ip_forward = 1/" /etc/sysctl.conf 
+            sysctl -p 
+            echo "iptables -t nat -A POSTROUTING -s 10.0.0.0/16 -j MASQUERADE" >> /etc/rc.local 
+            iptables -t nat -A POSTROUTING -s 10.0.0.0/16 -j MASQUERADE 
 
 #====== Nested STECK with PublicServers (FrontEnd)
 

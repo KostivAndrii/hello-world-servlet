@@ -27,8 +27,8 @@
     group: root
     mode: 0644
 
-#- name: Start the zabbix-agent service
-#  service:
-#    name: zabbix-agent
-#    state: started
-#    enabled: true
+- name: Start the zabbix-agent service
+  service:
+    name: zabbix-agent
+    state: started
+    enabled: true

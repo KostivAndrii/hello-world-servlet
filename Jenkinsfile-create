@@ -18,7 +18,7 @@ pipeline {
                 sh 'pwd'
                 sh 'ls -la'
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
-                  sh 'aws cloudformation create-stack --stack-name PROD --template-body file://./ec2.yaml --parameters ParameterKey=KeyName,ParameterValue=$aws_key_name ParameterKey=Environment,ParameterValue=${AWS_ENV} ParameterKey=NATGWInstanceTypeParameter,ParameterValue=t2.micro ParameterKey=VPCBlock,ParameterValue="10.0.0.0/16" ParameterKey=PublicSubnetACIDR,ParameterValue="10.0.10.0/24" ParameterKey=PrivateSubnetACIDR,ParameterValue="10.0.11.0/24" ParameterKey=PublicSubnetBCIDR,ParameterValue="10.0.20.0/24" ParameterKey=PrivateSubnetBCIDR,ParameterValue="10.0.21.0/24"'
+                  sh 'aws cloudformation create-stack --stack-name PROD --template-body file://./ec2.yaml --parameters ParameterKey=KeyName,ParameterValue=$aws_key_name ParameterKey=Environment,ParameterValue=${AWS_ENV} ParameterKey=NATGWInstanceTypeParameter,ParameterValue=t2.micro ParameterKey=VPCBlock,ParameterValue="10.0.0.0/16" ParameterKey=PublicSubnetCIDR,ParameterValue="10.0.10.0/24" ParameterKey=PrivateSubnetCIDR,ParameterValue="10.0.11.0/24"'
                 }
 //                sh 'sleep 120'
                 timeout(5) {

@@ -13,15 +13,16 @@ Metadata:
         Label:
           default: "Subnets CIDR Blocks"
         Parameters:
-          - PublicSubnetCIDR
-          - PrivateSubnetCIDR
+          - PublicSubnetACIDR
+          - PrivateSubnetACIDR
+          - PublicSubnetBCIDR
+          - PrivateSubnetBCIDR
           - NATGWInstanceTypeParameter
       - 
         Label: 
           default: "SSH key"
         Parameters: 
           - KeyName
-
 
 Parameters:
   Environment:
@@ -31,14 +32,22 @@ Parameters:
     Type: String
     Default: '10.0.0.0/16'  
 
-  PublicSubnetCIDR: 
+  PublicSubnetACIDR: 
     Type: String
     Default: '10.0.10.0/24'
-    Description: "Public Subnet CIDR"
-  PrivateSubnetCIDR: 
+    Description: "Public Subnet-A CIDR"
+  PrivateSubnetACIDR: 
     Type: String
     Default: '10.0.11.0/24'
-    Description: "Private Subnet CIDR"
+    Description: "Private Subnet-A CIDR"
+  PublicSubnetBCIDR: 
+    Type: String
+    Default: '10.0.20.0/24'
+    Description: "Public Subnet-B CIDR"
+  PrivateSubnetBCIDR: 
+    Type: String
+    Default: '10.0.21.0/24'
+    Description: "Private Subnet-B CIDR"
     
   KeyName:
     Description: 'Optional key pair of the ec2-user to establish a SSH connection to the EC2 instance.'
@@ -78,79 +87,159 @@ Resources:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
 
-#==================================================== Public Subnet =========	  
-  PublicSubnet:
+#==================================================== Public SubnetA =========	  
+  PublicSubnetA:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: !Ref PublicSubnetCIDR
+      AvailabilityZone: !Select [ 0, "Fn::GetAZs": { Ref: "AWS::Region" } ]
+      CidrBlock: !Ref PublicSubnetACIDR
+      MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Join [ " ", [ !Ref Environment, "PublicSubnet" ] ]
+          Value: !Join [ " ", [ !Ref Environment, "PublicSubnetA" ] ]
 
 #====== Public RouteTables =========	  
-  PublicRouteTables:
+  PublicRouteTablesA:
     Type: 'AWS::EC2::RouteTable'
     Properties:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Join [ " ", [ !Ref Environment, "PublicRouteTables" ] ]
+          Value: !Join [ " ", [ !Ref Environment, "PublicRouteTablesA" ] ]
 
 #======= Routes for Public Subnet RouteTables with IGW 
-  PublicRoute:
+  PublicRouteA:
     Type: 'AWS::EC2::Route'
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
-      RouteTableId: !Ref PublicRouteTables
+      RouteTableId: !Ref PublicRouteTablesA
       GatewayId: !Ref InternetGateway
     DependsOn:
       - GatewayAttachmentInternet
 
 #====== Associate Public Route for Public Subnets
-  RouteAssociationPublicSubnet:
+  RouteAssociationPublicSubnetA:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Properties:
-      RouteTableId: !Ref PublicRouteTables
-      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTablesA
+      SubnetId: !Ref PublicSubnetA
 
-#==================================================== Privat Subnet =========	  
-  PrivatSubnet:
+#==================================================== Public SubnetB =========	  
+  PublicSubnetB:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: !Ref PrivateSubnetCIDR
+      AvailabilityZone: !Select [ 1, "Fn::GetAZs": { Ref: "AWS::Region" } ]
+      CidrBlock: !Ref PublicSubnetBCIDR
+      MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Join [ " ", [ !Ref Environment, "PrivatSubnet" ] ]
+          Value: !Join [ " ", [ !Ref Environment, "PublicSubnetB" ] ]
 
-#====== Privat RouteTables =========	  
-  PrivatRouteTables:
+#====== Public RouteTablesB =========	  
+  PublicRouteTablesB:
     Type: 'AWS::EC2::RouteTable'
     Properties:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Join [ " ", [ !Ref Environment, "PrivatRouteTables" ] ]
+          Value: !Join [ " ", [ !Ref Environment, "PublicRouteTablesB" ] ]
 
-#======= Routes for Privat Subnet RouteTables with IGW 
-  PrivatRoute:
+#======= Routes for Public Subnet RouteTablesB with IGW 
+  PublicRouteB:
     Type: 'AWS::EC2::Route'
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
-      RouteTableId: !Ref PrivatRouteTables
-#      GatewayId: !Ref InternetGateway
-      InstanceId: !Ref NATGWInstance
+      RouteTableId: !Ref PublicRouteTablesB
+      GatewayId: !Ref InternetGateway
     DependsOn:
-#      - GatewayAttachmentInternet
-      - NATGWInstance
+      - GatewayAttachmentInternet
 
-#====== Associate Privat Route for Public Subnets
-  RouteAssociationPrivatSubnet:
+#====== Associate Public Route for Public SubnetsB
+  RouteAssociationPublicSubnetB:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Properties:
-      RouteTableId: !Ref PrivatRouteTables
-      SubnetId: !Ref PrivatSubnet
+      RouteTableId: !Ref PublicRouteTablesB
+      SubnetId: !Ref PublicSubnetB
+
+#==================================================== Privat SubnetA =========	  
+  PrivatSubnetA:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, "Fn::GetAZs": { Ref: "AWS::Region" } ]
+      CidrBlock: !Ref PrivateSubnetACIDR
+      Tags:
+        - Key: Name
+          Value: !Join [ " ", [ !Ref Environment, "PrivatSubnetA" ] ]
+
+#====== Privat RouteTablesA =========	  
+  PrivatRouteTablesA:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Join [ " ", [ !Ref Environment, "PrivatRouteTablesA" ] ]
+
+#======= Routes for Privat Subnet RouteTablesA with IGW 
+  PrivatRouteA:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      RouteTableId: !Ref PrivatRouteTablesA
+#      GatewayId: !Ref InternetGateway
+      InstanceId: !Ref NATGWInstanceA
+    DependsOn:
+#      - GatewayAttachmentInternet
+      - NATGWInstanceA
+
+#====== Associate Privat Route for Public Subnets
+  RouteAssociationPrivatSubnetA:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref PrivatRouteTablesA
+      SubnetId: !Ref PrivatSubnetA
+
+#==================================================== Privat SubnetB =========	  
+  PrivatSubnetB:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 1, "Fn::GetAZs": { Ref: "AWS::Region" } ]
+      CidrBlock: !Ref PrivateSubnetBCIDR
+      Tags:
+        - Key: Name
+          Value: !Join [ " ", [ !Ref Environment, "PrivatSubnetB" ] ]
+
+#====== Privat RouteTablesA =========	  
+  PrivatRouteTablesB:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Join [ " ", [ !Ref Environment, "PrivatRouteTablesB" ] ]
+
+#======= Routes for Privat Subnet RouteTablesA with IGW 
+  PrivatRouteB:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      RouteTableId: !Ref PrivatRouteTablesB
+#      GatewayId: !Ref InternetGateway
+      InstanceId: !Ref NATGWInstanceB
+    DependsOn:
+#      - GatewayAttachmentInternet
+      - NATGWInstanceB
+
+#====== Associate Privat Route for Public Subnets
+  RouteAssociationPrivatSubnetB:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref PrivatRouteTablesB
+      SubnetId: !Ref PrivatSubnetB
 
 #====== NAT GW SecurityGroup
   NATGWSecurityGroup:
@@ -160,7 +249,7 @@ Resources:
       GroupDescription: Allow access from SSH traffic and local traffic
       SecurityGroupIngress:
         - IpProtocol: -1
-          CidrIp: 10.0.0.0/10
+          CidrIp: 10.0.0.0/16
         - IpProtocol: tcp
           FromPort: '22'
           ToPort: '22'
@@ -169,8 +258,8 @@ Resources:
         - Key: Name
           Value: !Join [ " ", [ !Ref Environment, "NATGWSecurityGroup" ] ]
 
-#====== NAT GW instance
-  NATGWInstance:
+#====== NAT GW instanceA
+  NATGWInstanceA:
     Type: 'AWS::EC2::Instance'
     Properties:
       InstanceType: !Ref NATGWInstanceTypeParameter
@@ -182,14 +271,14 @@ Resources:
       SourceDestCheck: false
       Tags:
         - Key: Name
-          Value: !Join [ " ", [ !Ref Environment, "NATGW" ] ]          
+          Value: !Join [ " ", [ !Ref Environment, "NATGWA" ] ]          
       NetworkInterfaces:
         - GroupSet:
             - !Ref NATGWSecurityGroup
           AssociatePublicIpAddress: 'true'
           DeviceIndex: '0'
           DeleteOnTermination: 'true'
-          SubnetId: !Ref PublicSubnet
+          SubnetId: !Ref PublicSubnetA
       UserData: 
         Fn::Base64: 
           !Sub | 
@@ -199,9 +288,38 @@ Resources:
             echo "iptables -t nat -A POSTROUTING -s 10.0.0.0/16 -j MASQUERADE" >> /etc/rc.local 
             iptables -t nat -A POSTROUTING -s 10.0.0.0/16 -j MASQUERADE 
 
-#====== Nested STECK with PublicServers (FrontEnd)
+#====== NAT GW instanceB
+  NATGWInstanceB:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      InstanceType: !Ref NATGWInstanceTypeParameter
+      ImageId: !FindInMap 
+        - RegionMap
+        - !Ref 'AWS::Region'
+        - AMI
+      KeyName: !Ref KeyName
+      SourceDestCheck: false
+      Tags:
+        - Key: Name
+          Value: !Join [ " ", [ !Ref Environment, "NATGWB" ] ]          
+      NetworkInterfaces:
+        - GroupSet:
+            - !Ref NATGWSecurityGroup
+          AssociatePublicIpAddress: 'true'
+          DeviceIndex: '0'
+          DeleteOnTermination: 'true'
+          SubnetId: !Ref PublicSubnetB
+      UserData: 
+        Fn::Base64: 
+          !Sub | 
+            #!/bin/bash -xe 
+            sed -i "s/net.ipv4.ip_forward = 0/net.ipv4.ip_forward = 1/" /etc/sysctl.conf 
+            sysctl -p 
+            echo "iptables -t nat -A POSTROUTING -s 10.0.0.0/16 -j MASQUERADE" >> /etc/rc.local 
+            iptables -t nat -A POSTROUTING -s 10.0.0.0/16 -j MASQUERADE 
 
-  PublicServer:
+#====== Nested STECK with PublicServers (FrontEnd) A
+  PublicServerA:
     Type: AWS::CloudFormation::Stack
     Properties:
 #      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019130U9j-tomcat-v.2.12oqo2t30rm7d
@@ -215,11 +333,31 @@ Resources:
         VPC:
           Ref: VPC
         PublicSubnet:
-          Ref: PublicSubnet
+          Ref: PublicSubnetA
     DependsOn:
-      - PublicRoute
+      - PublicRouteA
 
-  PrivatInstance:
+#====== Nested STECK with PublicServers (FrontEnd) B
+  PublicServerB:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+#      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019130U9j-tomcat-v.2.12oqo2t30rm7d
+      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019132uK8-tomcat-v.2.14xqm2h1i4op
+      TimeoutInMinutes: '60'
+      Parameters:
+        Environment:
+          Ref: Environment
+        KeyName:
+          Ref: KeyName
+        VPC:
+          Ref: VPC
+        PublicSubnet:
+          Ref: PublicSubnetB
+    DependsOn:
+      - PublicRouteB
+
+#====== PrivatInstanceA
+  PrivatInstanceA:
     Type: 'AWS::EC2::Instance'
     Properties:
       InstanceType: t2.micro
@@ -232,43 +370,64 @@ Resources:
         - Key: VM
           Value: BackEnd
         - Key: Name
-          Value: !Join [ " ", [ !Ref Environment, "BackEnd" ] ]
+          Value: !Join [ " ", [ !Ref Environment, "BackEndA" ] ]
       NetworkInterfaces:
         - GroupSet:
             - !Ref NATGWSecurityGroup
           DeviceIndex: '0'
           DeleteOnTermination: 'true'
-          SubnetId: !Ref PrivatSubnet
+          SubnetId: !Ref PrivatSubnetA
 
+#====== PrivatInstanceB
+  PrivatInstanceB:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      InstanceType: t2.micro
+      ImageId: !FindInMap
+        - RegionMap
+        - !Ref 'AWS::Region'
+        - AMI
+      KeyName: !Ref KeyName
+      Tags:
+        - Key: VM
+          Value: BackEnd
+        - Key: Name
+          Value: !Join [ " ", [ !Ref Environment, "BackEndB" ] ]
+      NetworkInterfaces:
+        - GroupSet:
+            - !Ref NATGWSecurityGroup
+          DeviceIndex: '0'
+          DeleteOnTermination: 'true'
+          SubnetId: !Ref PrivatSubnetB
 
 Outputs:
   NATGWIP:
     Description: Public IP address of the newly created EC2 instance
     Value: !GetAtt 
-      - NATGWInstance
+      - NATGWInstanceA
       - PublicIp
   NATGWDNS:
     Description: Public DNSName of the newly created EC2 instance
     Value: !GetAtt 
-      - NATGWInstance
+      - NATGWInstanceA
       - PublicDnsName
   NATGWInstanceId:
     Description: InstanceId of the newly created EC2 instance
-    Value: !Ref NATGWInstance
+    Value: !Ref NATGWInstanceA
   StackRef:
-     Value: !Ref PublicServer
+     Value: !Ref PublicServerA
   TomcatPublicIP:
-     Value: !GetAtt PublicServer.Outputs.PublicIP
+     Value: !GetAtt PublicServerA.Outputs.PublicIP
   TomcatPublicDNS:
-     Value: !GetAtt PublicServer.Outputs.PublicDNS
+     Value: !GetAtt PublicServerA.Outputs.PublicDNS
   TomcatInstanceId:
-     Value: !GetAtt PublicServer.Outputs.InstanceId
+     Value: !GetAtt PublicServerA.Outputs.InstanceId
   ZabbixPublicIP:
-     Value: !GetAtt PublicServer.Outputs.ZabbixPublicIP
+     Value: !GetAtt PublicServerA.Outputs.ZabbixPublicIP
   ZabbixPublicDNS:
-     Value: !GetAtt PublicServer.Outputs.ZabbixPublicDNS
+     Value: !GetAtt PublicServerA.Outputs.ZabbixPublicDNS
   ZabbixInstanceId:
-     Value: !GetAtt PublicServer.Outputs.ZabbixInstanceId
+     Value: !GetAtt PublicServerA.Outputs.ZabbixInstanceId
      
 Mappings:
   RegionMap:

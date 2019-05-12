@@ -95,7 +95,7 @@ LogFileSize=0
 # Default:
 # Server=
 
-Server=127.0.0.1
+Server=hostvars[groups['tag_VM_Zabbix'][0]].ansible_default_ipv4.address
 
 ### Option: ListenPort
 #       Agent will listen on this port for connections from the server.
@@ -136,7 +136,7 @@ Server=127.0.0.1
 # Default:
 # ServerActive=
 
-ServerActive=127.0.0.1
+ServerActive=hostvars[groups['tag_VM_Zabbix'][0]].ansible_default_ipv4.address
 
 ### Option: Hostname
 #       Unique, case sensitive hostname.

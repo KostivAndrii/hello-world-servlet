@@ -1,6 +1,6 @@
 ---
 # tasks file for zabbix-agent
-- name: Install zabbix
+- name: Install libselinux-python
   yum: 
     pkg: libselinux-python
 

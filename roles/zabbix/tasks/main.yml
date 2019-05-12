@@ -93,9 +93,9 @@
     state: started
     enabled: true
 
-- name: Start the zabbix-java-gateway service
+- name: Start the zabbix-agent service
   service:
-    name: zabbix-java-gateway
+    name: zabbix-agent
     state: started
     enabled: true
 
@@ -104,10 +104,9 @@
     name: zabbix-server
     state: started
     enabled: true
-
-- name: Start the zabbix-agent service
+  
+- name: Start the zabbix-java-gateway service
   service:
-    name: zabbix-agent
+    name: zabbix-java-gateway
     state: started
     enabled: true
-  

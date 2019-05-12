@@ -10,5 +10,5 @@
   gather_facts: true
   roles:
     - tomcat
-#    - zabbix-agent
+    - zabbix-agent
 

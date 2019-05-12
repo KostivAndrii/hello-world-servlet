@@ -1,5 +1,9 @@
 ---
 # tasks file for zabbix-agent
+- name: Install zabbix
+  yum: 
+    pkg: libselinux-python
+
 - name: Disable SELinux
   selinux:
     state: disabled

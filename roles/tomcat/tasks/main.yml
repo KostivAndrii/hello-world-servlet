@@ -54,21 +54,21 @@
     recurse: yes
     state: directory
 
-# - name: copying service file
-#   template:
-#     src: tomcat.service.j2
-#     dest: "/etc/systemd/system/tomcat.service"
-#     owner: root
-#     group: root
-#     mode: 0644
+ - name: copying service file
+   template:
+     src: tomcat.service.j2
+     dest: "/etc/systemd/system/tomcat.service"
+     owner: root
+     group: root
+     mode: 0644
 
-- name: copying service file
-  template:
-    src: tomcat.j2
-    dest: /etc/init.d/tomcat
-    owner: root
-    group: root
-    mode: 0755
+#- name: copying service file
+#  template:
+#    src: tomcat.j2
+#    dest: /etc/init.d/tomcat
+#    owner: root
+#    group: root
+#    mode: 0755
 
 - name: coping tomcat/conf/ [ server.xml, context.xml ]
   copy:

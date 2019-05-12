@@ -49,7 +49,7 @@ Parameters:
   KeyName:
     Description: 'Optional key pair of the ec2-user to establish a SSH connection to the EC2 instance.'
     Type: 'AWS::EC2::KeyPair::KeyName'
-    Default: '1'
+    Default: 'aws-test-oregon'
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
 
   NATGWInstanceTypeParameter: 
@@ -166,7 +166,7 @@ Resources:
       GroupDescription: Allow access from SSH traffic and local traffic
       SecurityGroupIngress:
         - IpProtocol: -1
-          CidrIp: 10.0.0.0/10
+          CidrIp: 10.0.0.0/16
         - IpProtocol: tcp
           FromPort: '22'
           ToPort: '22'

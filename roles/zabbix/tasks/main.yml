@@ -75,7 +75,7 @@
     block: |
       DBHost=localhost
       DBPassword=1UIhjIgovdckR5m4OWri$
-      JavaGateway=127.0.0.1
+      JavaGateway={{ ansible_default_ipv4.address }}
       JavaGatewayPort=10052
       StartJavaPollers=5
 

@@ -198,12 +198,14 @@ Resources:
           SubnetId: !Ref PublicSubnet
       UserData: 
         Fn::Base64: 
-          !Sub | 
-            #!/bin/bash -xe 
-            sed -i "s/net.ipv4.ip_forward = 0/net.ipv4.ip_forward = 1/" /etc/sysctl.conf 
-            sysctl -p 
-            echo "iptables -t nat -A POSTROUTING -s 10.0.0.0/16 -j MASQUERADE" >> /etc/rc.local 
-            iptables -t nat -A POSTROUTING -s 10.0.0.0/16 -j MASQUERADE 
+          Fn::Sub: 
+            - |
+              #!/bin/bash -xe 
+              sed -i "s/net.ipv4.ip_forward = 0/net.ipv4.ip_forward = 1/" /etc/sysctl.conf 
+              sysctl -p 
+              echo "iptables -t nat -A POSTROUTING -s ${VPCCIDR} -j MASQUERADE" >> /etc/rc.local 
+              iptables -t nat -A POSTROUTING -s ${VPCCIDR} -j MASQUERADE
+            - VPCCIDR: !Ref VPCBlock
 
 #====== Nested STECK with PublicServers (FrontEnd)
 

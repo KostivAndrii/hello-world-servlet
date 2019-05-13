@@ -212,8 +212,8 @@ Resources:
   PublicServer:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019132zxS-tomcat-v.2.15nqofc8lky2
-#-      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019132EtT-tomcat-v.2.169cpniu2tucc
+#      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019132zxS-tomcat-v.2.15nqofc8lky2
+      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019132EtT-tomcat-v.2.169cpniu2tucc
 #+      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019132sGl-tomcat-v2.17358iysj0op
       TimeoutInMinutes: '60'
       Parameters:

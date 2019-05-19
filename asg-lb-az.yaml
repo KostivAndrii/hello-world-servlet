@@ -165,6 +165,7 @@ Resources:
     Type: 'AWS::ElasticLoadBalancing::LoadBalancer'
     Properties:
       AvailabilityZones: !Ref AvailabilityZones
+      CrossZone: 'true'
       Listeners:
         - LoadBalancerPort: '80'
           InstancePort: '8080'

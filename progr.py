@@ -20,10 +20,12 @@ datamap = yaml.safe_load(stream)
 print('json_obj =', datamap)
 output=open('parammm.json', 'w')
 json.dump(datamap, output)
-output.close
-stream.close
+output.flush()
+output.close()
+stream.close()
 
 # https://stackoverflow.com/questions/51914505/python-yaml-to-json-to-yaml
+# https://github.com/awslabs/aws-cfn-template-flip
 yaml.dump(sample, ff, default_flow_style=False)
 type(ff)
 

@@ -1,0 +1,8 @@
+--- 
+Environment: STAGE
+KeyName: aws-test-oregon
+NATGWInstanceTypeParameter: t2.micro
+PrivateSubnetCIDR: 10.0.11.0/24
+PublicSubnetCIDR: 10.0.10.0/24
+VPCBlock: 10.0.0.0/16
+

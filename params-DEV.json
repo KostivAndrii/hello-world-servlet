@@ -1,0 +1,26 @@
+[
+        {
+            "ParameterKey": "KeyName",
+            "ParameterValue": "aws-test-oregon"
+        },
+        {
+            "ParameterKey": "Environment",
+            "ParameterValue": "DEV"
+        },
+        {
+            "ParameterKey": "NATGWInstanceTypeParameter",
+            "ParameterValue": "t2.micro"
+        },
+        {
+            "ParameterKey": "VPCBlock",
+            "ParameterValue": "10.0.0.0/16"
+        },
+        {
+            "ParameterKey": "PublicSubnetCIDR",
+            "ParameterValue": "10.0.10.0/24"
+        },
+        {
+            "ParameterKey": "PrivateSubnetCIDR",
+            "ParameterValue": "10.0.11.0/24"
+        }
+]

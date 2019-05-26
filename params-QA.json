@@ -5,7 +5,7 @@
         },
         {
             "ParameterKey": "Environment",
-            "ParameterValue": "STAGE"
+            "ParameterValue": "QA"
         },
         {
             "ParameterKey": "NATGWInstanceTypeParameter",
@@ -13,14 +13,14 @@
         },
         {
             "ParameterKey": "VPCBlock",
-            "ParameterValue": "10.0.0.0/16"
+            "ParameterValue": "10.10.0.0/16"
         },
         {
             "ParameterKey": "PublicSubnetCIDR",
-            "ParameterValue": "10.0.10.0/24"
+            "ParameterValue": "10.10.10.0/24"
         },
         {
             "ParameterKey": "PrivateSubnetCIDR",
-            "ParameterValue": "10.0.11.0/24"
+            "ParameterValue": "10.10.11.0/24"
         }
 ]

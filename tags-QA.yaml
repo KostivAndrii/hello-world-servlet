@@ -1,0 +1,6 @@
+---
+- Key: env
+#  Value: dev
+  Value: qa
+- Key: e-mail
+  Value: qa_ok@ob.com

@@ -1,1 +1,1 @@
-[{"Key": "env", "Value": "dev"}, {"Key": "e-mail", "Value": "dev_ok@ob.com"}]
+[{"Key": "env", "Value": "qa"}, {"Key": "e-mail", "Value": "test_ok@ob.com"}, {"Key": "SNAPSHOT", "Value": "2.0.157"}]

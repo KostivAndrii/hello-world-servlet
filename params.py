@@ -11,11 +11,11 @@ def process_yaml(inputfile, outputfile):
   except FileNotFoundError:
       print("can''t open source file %s " % inputfile)
       sys.exit(1)
-  try:
-      output=open(outputfile, 'w')
-  except FileNotFoundError:
-      print("can''t open destiantion file %s " % inputfile)
-      sys.exit(2)
+#   try:
+#       output=open(outputfile, 'w')
+#   except FileNotFoundError:
+#       print("can''t open destiantion file %s " % inputfile)
+#       sys.exit(2)
   datamap = yaml.safe_load(stream)
   print('json_obj =', datamap)
 
@@ -27,12 +27,30 @@ def process_yaml(inputfile, outputfile):
       #   Parameters[i]["ParameterValue"] = datamap[0]["Parameters"][paramm]
   print('Parameters =', Parameters)
 
+  try:
+      output=open(outputfile, 'w')
+  except FileNotFoundError:
+      print("can''t open destiantion file %s " % inputfile)
+      sys.exit(2)
+  json.dump(Parameters, output)
+  output.flush()
+  output.close()
+
   Tags = []
   for paramm in datamap[1]["Tags"]:
       value = datamap[1]["Tags"][paramm]
-      Key = {"ParameterKey": paramm, "ParameterValue": value}
+      Key = {"Key": paramm, "Value": value}
       Tags.append(Key)
   print('Tags =', Tags)
+
+  try:
+      output=open('tags.json', 'w')
+  except FileNotFoundError:
+      print("can''t open destiantion file %s " % inputfile)
+      sys.exit(2)
+  json.dump(Tags, output)
+  output.flush()
+  output.close()
 
 #   Tags = {}
 #   for i in datamap[1]["Tags"]:
@@ -40,10 +58,10 @@ def process_yaml(inputfile, outputfile):
 #       Tags[i]["ParameterValue"] = datamap[1]["Tags"][i]
 #   print('Tags =', Tags)
 
-  json.dump(datamap, output)
-  output.flush()
-  output.close()
-  stream.close()
+#   json.dump(datamap, output)
+#   output.flush()
+#   output.close()
+#   stream.close()
 
 # program_name = sys.argv[0]
 def main():

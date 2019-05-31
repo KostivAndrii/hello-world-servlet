@@ -23,13 +23,15 @@ def process_yaml(inputfile, outputfile):
       sys.exit(2)
   datamap = yaml.safe_load(stream)
   print('json_obj =', datamap)
+  A = datamap[0]
+  print('ENV', A)
   json.dump(datamap, output)
   output.flush()
   output.close()
   stream.close()
 
-# program_name = sys.argv[0]
 
+# program_name = sys.argv[0]
 if len(sys.argv[1:]) < 1 :
     sys.exit('should be described ENVIRONMENT') 
 envir = sys.argv[1]
@@ -52,3 +54,4 @@ print("Lets process tags.yaml")
 
 inputfile = 'tags-'+sys.argv[1]+'.yaml'
 process_yaml(inputfile, 'tags.json')
+

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+#import os
 import json
 import yaml
 
@@ -9,7 +10,9 @@ def process_yaml(inputfile, outputfile):
   try:
       stream = open(inputfile, 'r')
   except FileNotFoundError:
-      print("can''t open source file %s " % inputfile)
+#      path = os.getcwd()
+#      print("can''t open source file %s\%s " % (path, inputfile))
+      print("can''t open source file %s" % inputfile)
       sys.exit(1)
 #   try:
 #       output=open(outputfile, 'w')
@@ -30,6 +33,8 @@ def process_yaml(inputfile, outputfile):
   try:
       output=open(outputfile, 'w')
   except FileNotFoundError:
+#      path = os.getcwd()
+#      print("can''t open destiantion file %s\%s " % (path, inputfile))
       print("can''t open destiantion file %s " % inputfile)
       sys.exit(2)
   json.dump(Parameters, output)

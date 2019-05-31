@@ -1,12 +1,12 @@
 ---
 - Parameters:
-    Environment: QA
+    Environment: TEST
     KeyName: aws-test-oregon
     NATGWInstanceTypeParameter: t2.micro
-    VPCBlock: 10.10.0.0/16
-    PublicSubnetCIDR: 10.10.10.0/24
-    PrivateSubnetCIDR: 10.10.11.0/24
+    VPCBlock: 10.100.0.0/16
+    PublicSubnetCIDR: 10.100.10.0/24
+    PrivateSubnetCIDR: 10.100.11.0/24
 - Tags:
-    env: qa
+    env: test
     e-mail: test_ok@ob.com
     SNAPSHOT: 2.0.157

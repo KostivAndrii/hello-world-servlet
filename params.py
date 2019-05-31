@@ -27,14 +27,10 @@ def process_yaml(inputfile, outputfile):
       value = datamap[0]["Parameters"][paramm]
       Key = {"ParameterKey": paramm, "ParameterValue": value}
       Parameters.append(Key)
-      #   Parameters[i]["ParameterValue"] = datamap[0]["Parameters"][paramm]
   print('Parameters =', Parameters)
-
   try:
       output=open(outputfile, 'w')
   except FileNotFoundError:
-#      path = os.getcwd()
-#      print("can''t open destiantion file %s\%s " % (path, inputfile))
       print("can''t open destiantion file %s " % inputfile)
       sys.exit(2)
   json.dump(Parameters, output)
@@ -47,7 +43,6 @@ def process_yaml(inputfile, outputfile):
       Key = {"Key": paramm, "Value": value}
       Tags.append(Key)
   print('Tags =', Tags)
-
   try:
       output=open('tags.json', 'w')
   except FileNotFoundError:
@@ -57,18 +52,7 @@ def process_yaml(inputfile, outputfile):
   output.flush()
   output.close()
 
-#   Tags = {}
-#   for i in datamap[1]["Tags"]:
-#       Tags[i]["ParameterKey"] = i
-#       Tags[i]["ParameterValue"] = datamap[1]["Tags"][i]
-#   print('Tags =', Tags)
 
-#   json.dump(datamap, output)
-#   output.flush()
-#   output.close()
-#   stream.close()
-
-# program_name = sys.argv[0]
 def main():
     if len(sys.argv[1:]) < 1 :
         sys.exit('should be described ENVIRONMENT')

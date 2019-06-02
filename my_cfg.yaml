@@ -1,0 +1,12 @@
+---
+- parameters:
+    Environment: STAGE
+    KeyName: aws-test-oregon
+    NATGWInstanceTypeParameter: t2.micro
+    VPCBlock: 10.200.0.0/16
+    PublicSubnetCIDR: 10.200.10.0/24
+    PrivateSubnetCIDR: 10.200.11.0/24
+- tags:
+    env: stage
+    e-mail: stage_ok@ob.com
+    SNAPSHOT: 3.2.11

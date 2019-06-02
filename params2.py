@@ -3,16 +3,17 @@ import sys
 import os
 import json
 import yaml
-import boto3
+
+# import boto3
 import boto.cloudformation
 
-conn = boto.cloudformation.connection.CloudFormationConnection()
-conn.create_stack('mystack', template_body=None, template_url='https://cloudfront-live.s3.amazonaws.com/live-http-streaming-fms-4-5-1-using-cloudfront.txt', parameters=], notification_arns=[, disable_rollback=False, timeout_in_minutes=None, capabilities=None)
+# conn = boto.cloudformation.connection.CloudFormationConnection()
+# conn.create_stack('mystack', template_body="ec2.yaml", template_url=None, parameters=], notification_arns=[, disable_rollback=False, timeout_in_minutes=None, capabilities=None)
+# conn.create_stack('mystack', template_body="ec2.yaml", template_url=None, parameters=[('KeyPair', 'myKeyPair'), ('FMSAdminPassword', 'myPassword')], notification_arns=[], disable_rollback=False, timeout_in_minutes=None, capabilities=None)
 
-
-s3 = boto3.resource('s3')
-print(s3)
-ec2 = boto.ec2.connect_to_region('eu-west-3')
+# s3 = boto3.resource('s3')
+# print(s3)
+# ec2 = boto.ec2.connect_to_region('eu-west-3')
 
 allowed_env = ['DEV','QA','TEST']
 
@@ -56,6 +57,20 @@ def run(cmd):
     stdout = os.popen(cmd).read()
     return stdout
 
+
+def create_cf_boto(cf_stack, cf_template_url, parameters, tags):
+    cf_param = []
+    for paramm in parameters:
+        Key = (paramm, parameters[paramm])
+        cf_param.append(Key)
+    cf_tags = {}
+    for paramm in tags:
+        cf_tags[paramm] = tags[paramm]
+        # cf_tags.append(Key)
+    conn = boto.cloudformation.connection.CloudFormationConnection()
+    stdout = conn.create_stack(cf_stack, template_body=None, template_url=cf_template_url, parameters=cf_param, notification_arns=[], disable_rollback=False, timeout_in_minutes=None, capabilities=None, tags=cf_tags)
+    return stdout 
+
 def main():
     args_count = len(sys.argv[1:])
     if args_count < 1 :
@@ -87,6 +102,22 @@ def main():
     tags = cfg[1]["tags"]
     print('parameters = ', parameters)
     print('tags = ', tags)
+    
+    # cf_param = []
+    # for paramm in parameters:
+    #     Key = (paramm, parameters[paramm])
+    #     cf_param.append(Key)
+
+    # boto.cloudformation.connect_to_region("eu-west-3")
+    # conn.
+    # conn.
+    # template_url = 'https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019153GhZ-ec2-natgw-tomcattpk5so5vb7k'
+    # template_url = 'https://s3-external-1.amazonaws.com/cf-templates-1ldvye973texh-us-east-1/20191539Ae-cf-natgw-tomcatuumsynh895'
+    # nasted https://s3-external-1.amazonaws.com/cf-templates-1ldvye973texh-us-east-1/2019153q0R-tomcat-v.2.153en2wbmth2v
+    # with open("ec2.yaml") as tmpfile:
+    #     template_body = json.dumps(yaml.safe_load(tmpfile))
+    # conn = boto.cloudformation.connection.CloudFormationConnection()
+    # conn.create_stack('mystack', template_body=None, template_url=template_url, parameters=cf_param, notification_arns=[], disable_rollback=False, timeout_in_minutes=None, capabilities=None)
 
     write_json("parameters.json",parameters,"ParameterKey", "ParameterValue")
     write_json("tags.json",tags,"Key", "Value")
@@ -103,6 +134,10 @@ def main():
     if action == "UPDATE":
         cmd = "aws cloudformation update-stack --stack-name "+stack+" --template-body file://ec2.yaml --parameters file://parameters.json --tags file://tags.json"
         stdout = run(cmd)
+        print('stdout = ', stdout)
+    if action == "BOTO":
+        template_url = 'https://s3-external-1.amazonaws.com/cf-templates-1ldvye973texh-us-east-1/20191539Ae-cf-natgw-tomcatuumsynh895'
+        stdout = create_cf_boto(stack, template_url, parameters, tags)
         print('stdout = ', stdout)
 
     # print('')

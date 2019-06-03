@@ -3,6 +3,7 @@ import sys
 import os
 import json
 import yaml
+import argparse
 
 # import boto3
 import boto.cloudformation
@@ -76,6 +77,25 @@ def create_cf_boto(cf_stack, cf_template_url, parameters, tags):
     return stdout
 
 def main():
+    parser = argparse.ArgumentParser(description='Description of your program')
+    parser.add_argument('env', help='Environment')
+    parser.add_argument('stack', help='STACK name')
+    parser.add_argument('action', help='what to do CREATE/UPDATE/BOTO')
+    parser.add_argument('input', help='file with parameters and tags')
+    # parser.add_argument('-e','--env', help='Environment', required=True)
+    # parser.add_argument('-s','--stack', help='STACK name', required=True)
+    # parser.add_argument('-a','--action', help='what to do CREATE/UPDATE/BOTO', required=True)
+    # parser.add_argument('-i','--input', help='file with parameters and tags', required=False)
+    args = vars(parser.parse_args())
+    if args['env'] not in allowed_env:
+        print('wrong env - we process only', allowed_env)
+        sys.exit()
+    stack = args['stack']
+    inputfile = args['input']
+    # code here
+
+    # if args['bar'] == 'World':
+    # code here
     args_count = len(sys.argv[1:])
     if args_count < 1 :
         sys.exit('should be described ENVIRONMENT')

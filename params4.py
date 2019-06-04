@@ -17,7 +17,6 @@ import boto.cloudformation
 # ec2 = boto.ec2.connect_to_region('eu-west-3')
 
 allowed_env = ['DEV','QA','TEST']
-allowed_action = ['CREATE', 'UPDATE', 'TEST', 'BOTO']
 
 def read_cfg(inputfile):
     try:
@@ -78,27 +77,27 @@ def create_cf_boto(cf_stack, cf_template_url, parameters, tags):
     return stdout
 
 def main():
-    parser = argparse.ArgumentParser(description='Programm to work with AWS')
-    parser.add_argument("-e","--env", help="Environment name", type=str)
-    parser.add_argument("-s","--stack", help="STACK name", type=str)
-    parser.add_argument('-a','--action', help='what to do CREATE/UPDATE/BOTO')
-    parser.add_argument('-i','--input', help='file with parameters and tags')
-    parser.add_argument('-cf','--cloud-formation', help='file with parameters and tags')
+    parser = argparse.ArgumentParser(description='Description of your program')
+    parser.add_argument('env', help='Environment')
+    parser.add_argument('stack', help='STACK name')
+    parser.add_argument('action', help='what to do CREATE/UPDATE/BOTO')
+    parser.add_argument('input', help='file with parameters and tags')
     # parser.add_argument('-e','--env', help='Environment', required=True)
     # parser.add_argument('-s','--stack', help='STACK name', required=True)
     # parser.add_argument('-a','--action', help='what to do CREATE/UPDATE/BOTO', required=True)
     # parser.add_argument('-i','--input', help='file with parameters and tags', required=False)
-    args = parser.parse_args()
-    # args = vars(parser.parse_args())
-    if args.env not in allowed_env:
+    args = vars(parser.parse_args())
+    if args['env'] not in allowed_env:
         print('wrong env - we process only', allowed_env)
         sys.exit()
-    if args.action not in allowed_action:
-        print('wrong env - we process only', allowed_action)
-        sys.exit()
-    # stack = args['stack']
-    # inputfile = args['input']
+    envir = args['env']
+    stack = args['stack']
+    inputfile = args['input']
+    action = args['action']
+    # code here
 
+    # if args['bar'] == 'World':
+    # code here
     # args_count = len(sys.argv[1:])
     # if args_count < 1 :
     #     sys.exit('should be described ENVIRONMENT')
@@ -119,10 +118,10 @@ def main():
     # else:
     #     action = 'CREATE'
 
-    # print("script will convert %s into parameters.json and tags.json for ENVIRONMENT %s and %s STACK %s" % (inputfile, envir, action, stack) )
+    print("script will convert %s into parameters.json and tags.json for ENVIRONMENT %s and %s STACK %s" % (inputfile, envir, action, stack) )
 
     # inputfile = 'params-'+sys.argv[1]+'.yaml'
-    cfg = read_cfg(args.input)
+    cfg = read_cfg(inputfile)
     print('cfg = ', cfg)
 
     parameters = cfg["parameters"]
@@ -160,18 +159,18 @@ def main():
     stdout = run(cmd)
     print('stdout = ', stdout)
 
-    if args.action == "CREATE":
-        cmd = "aws cloudformation create-stack --stack-name " + args.stack + \
+    if action == "CREATE":
+        cmd = "aws cloudformation create-stack --stack-name " + stack + \
               " --template-body file://ec2.yaml --parameters file://parameters.json --tags file://tags.json"
         stdout = run(cmd)
         print('stdout = ', stdout)
-    if args.action == "UPDATE":
-        cmd = "aws cloudformation update-stack --stack-name "+args.stack+" --template-body file://ec2.yaml --parameters file://parameters.json --tags file://tags.json"
+    if action == "UPDATE":
+        cmd = "aws cloudformation update-stack --stack-name "+stack+" --template-body file://ec2.yaml --parameters file://parameters.json --tags file://tags.json"
         stdout = run(cmd)
         print('stdout = ', stdout)
-    if args.action == "BOTO":
+    if action == "BOTO":
         template_url = 'https://s3-external-1.amazonaws.com/cf-templates-1ldvye973texh-us-east-1/20191539Ae-cf-natgw-tomcatuumsynh895'
-        stdout = create_cf_boto(args.stack, template_url, parameters, tags)
+        stdout = create_cf_boto(stack, template_url, parameters, tags)
         print('stdout = ', stdout)
 
     # print('')

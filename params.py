@@ -53,6 +53,12 @@ def process_yaml(inputfile, outputfile):
   output.close()
 
 
+
+days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+
+for i,m in enumerate(days, start=3):
+    print(i,m)
+
 def main():
     if len(sys.argv[1:]) < 1 :
         sys.exit('should be described ENVIRONMENT')

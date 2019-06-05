@@ -36,7 +36,7 @@ def write_json(outputfile, data, KeyName, ValueName):
     try:
         output=open(outputfile, 'w')
     except FileNotFoundError:
-        print("can''t open destiantion file %s " % inputfile)
+        print("can''t open destiantion file %s " % outputfile)
         sys.exit(2)
 
     OutputParam = [ {KeyName: paramm, ValueName: data[paramm]} for paramm in data ]

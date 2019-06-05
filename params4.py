@@ -27,7 +27,7 @@ def write_json(outputfile, data, KeyName, ValueName):
     try:
         output=open(outputfile, 'w')
     except FileNotFoundError:
-        print("can''t open destiantion file %s " % inputfile)
+        print("can''t open destiantion file %s " % outputfile)
         sys.exit(2)
     OutputParam = [ {KeyName: paramm, ValueName: data[paramm]} for paramm in data ]
     json.dump(OutputParam, output)
@@ -70,9 +70,19 @@ def create_temp_file(size, file_name, file_content):
         f.write(str(file_content) * size)
     return random_file_name
 
+def _stack_exists(cf_client, stack_name):
+    stacks = cf_client.list_stacks()['StackSummaries']
+    for stack in stacks:
+        if stack['StackStatus'] == 'DELETE_COMPLETE':
+            continue
+        if stack_name == stack['StackName']:
+            return True
+    return False
+
+
 def main():
     parser = argparse.ArgumentParser(description='Programm to work with AWS')
-    parser.add_argument("-e","--env", help="Environment name", type=str)
+    # parser.add_argument("-e","--env", help="Environment name", type=str)
     parser.add_argument("-s","--stack", help="STACK name", type=str)
     parser.add_argument('-a','--action', help='what to do CREATE/UPDATE/BOTO')
     parser.add_argument('-i','--input', help='file with parameters and tags')
@@ -81,14 +91,16 @@ def main():
     parser.add_argument('-s3','--s3', help='file with parameters and tags')
     # "-e=TEST",
     # "-s=AWS-NATGW",
-    # "-a=CREATE",
+    # "-a=BOTO",
     # "-i=my_cfg.yaml",
-    # "-cf=ec2.yaml" args.cloud_formation
+    # "-cf=ec2.yaml",
+    # "-cfk=ec2.yaml",
+    # "-s3=cf-yaml-s3-bucket"
 
     args = parser.parse_args()
-    if args.env not in allowed_env:
-        print('wrong env - we process only', allowed_env)
-        sys.exit()
+    # if args.env not in allowed_env:
+    #     print('wrong env - we process only', allowed_env)
+    #     sys.exit()
     if args.action not in allowed_action:
         print('wrong env - we process only', allowed_action)
         sys.exit()
@@ -97,8 +109,8 @@ def main():
     # inputfile = args['input']
     # action = args['action']
 
-    print("script will convert %s into parameters.json and tags.json for ENVIRONMENT %s and %s STACK %s" \
-        % (args.input, args.env, args.action, args.stack) )
+    print("script will convert %s into parameters.json and tags.json for ENVIRONMENT ... and %s STACK %s" \
+        % (args.input, args.action, args.stack) )
 
     cfg = read_cfg(args.input)
     print('cfg = ', cfg)
@@ -186,8 +198,8 @@ def main():
     # conn = boto.cloudformation.connection.CloudFormationConnection()
     # conn.create_stack('mystack', template_body=None, template_url=template_url, parameters=cf_param, notification_arns=[], disable_rollback=False, timeout_in_minutes=None, capabilities=None)
 
-    write_json("parameters.json",parameters,"ParameterKey", "ParameterValue")
-    write_json("tags.json",tags,"Key", "Value")
+    jParameters = write_json("parameters.json",parameters,"ParameterKey", "ParameterValue")
+    jTags = write_json("tags.json",tags,"Key", "Value")
     # process_yaml(inputfile, 'params.json')
 
     cmd = "aws cloudformation validate-template --template-body file://ec2.yaml"
@@ -204,11 +216,50 @@ def main():
               " --template-body file://ec2.yaml --parameters file://parameters.json --tags file://tags.json"
         stdout = run(cmd)
         print('stdout = ', stdout)
-    if action == "BOTO":
-        
+    if args.action == "BOTO":
+        if _stack_exists(cf_client, args.stack):
+            print('Updating {}'.format(args.stack))
+            response = cf_client.update_stack(StackName=args.stack, TemplateURL=object_url, Parameters=jParameters, Tags=jTags)
+            waiter = cf_client.get_waiter('stack_update_complete')
+        else:
+            print('Creating {}'.format(args.stack))
+            response = cf_client.create_stack(StackName=args.stack, TemplateURL=object_url, Parameters=jParameters, Tags=jTags)
+            waiter = cf_client.get_waiter('stack_create_complete')
+        waiter.wait(StackName=args.stack)
+        # response = cf_client.create_stack(StackName=args.stack, TemplateURL=object_url, Parameters=jParameters, Tags=jTags)
+        print('ec2.yaml create = ', response)
+        # cf_param = [ {paramm, parameters[paramm]} for paramm in parameters ]
+        # cf_tags = { paramm: tags[paramm] for paramm in tags }
+        # response = cf_client.create_stack(StackName=args.stack, TemplateURL=object_url, Parameters=cf_param, Tags=cf_tags)
+
         # # template_url = 'https://s3-external-1.amazonaws.com/cf-templates-1ldvye973texh-us-east-1/20191539Ae-cf-natgw-tomcatuumsynh895'
         # # stdout = create_cf_boto(stack, template_url, parameters, tags)
         # print('stdout = ', stdout)
+    ec2 = boto3.resource('ec2')
+    client = boto3.client('ec2')
+
+    response = client.describe_tags(Filters=[{'Key': 'VM', 'Value': 'Tomcat'}])
+    print(response)
+    custom_filter = [{'Name':'tag:VM', 'Values': ['Tomcat']}]
+    response = client.describe_instances(Filters=custom_filter)
+    # for instance in ec2.instances.all():
+    #     print(instance.tags(Filters=custom_filter))
+
+    cf_client = boto3.client('cloudformation')
+    r = cf_client.describe_stacks(StackName="AWS-NATGW")
+    s, = r['Stacks']
+    outputs = s['Outputs']
+
+    out = {}
+    for o in outputs:
+        key = _to_env(o['OutputKey'])
+        out[key] = o['OutputValue']
+    print(json.dumps(out, indent=2))
+
+import re
+def _to_env(name):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).upper()
 
 
 if __name__ == "__main__":

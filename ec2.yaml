@@ -39,7 +39,7 @@ Parameters:
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
     Default: '10.0.10.0/24'
     Description: "Public Subnet CIDR"
-  PrivateSubnetCIDR: 
+  PrivateSubnetCIDR:
     Type: String
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
@@ -52,10 +52,10 @@ Parameters:
     Default: 'aws-test-oregon'
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
 
-  NATGWInstanceTypeParameter: 
+  NATGWInstanceTypeParameter:
     Type: String
     Default: t2.micro
-    AllowedValues: 
+    AllowedValues:
       - t2.micro
     Description: Enter Instance Type for NAT GateWay. Default is t2.micro.
 
@@ -73,7 +73,7 @@ Resources:
 
   InternetGateway:
     Type: 'AWS::EC2::InternetGateway'
-    Properties: 
+    Properties:
       Tags:
         - Key: Name
           Value: !Ref Environment
@@ -84,7 +84,7 @@ Resources:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
 
-#==================================================== Public Subnet =========	  
+#==================================================== Public Subnet =========
   PublicSubnet:
     Type: 'AWS::EC2::Subnet'
     Properties:
@@ -94,7 +94,7 @@ Resources:
         - Key: Name
           Value: !Join [ " ", [ !Ref Environment, "PublicSubnet" ] ]
 
-#====== Public RouteTables =========	  
+#====== Public RouteTables =========
   PublicRouteTables:
     Type: 'AWS::EC2::RouteTable'
     Properties:
@@ -103,7 +103,7 @@ Resources:
         - Key: Name
           Value: !Join [ " ", [ !Ref Environment, "PublicRouteTables" ] ]
 
-#======= Routes for Public Subnet RouteTables with IGW 
+#======= Routes for Public Subnet RouteTables with IGW
   PublicRoute:
     Type: 'AWS::EC2::Route'
     Properties:
@@ -120,7 +120,7 @@ Resources:
       RouteTableId: !Ref PublicRouteTables
       SubnetId: !Ref PublicSubnet
 
-#==================================================== Privat Subnet =========	  
+#==================================================== Privat Subnet =========
   PrivatSubnet:
     Type: 'AWS::EC2::Subnet'
     Properties:
@@ -130,7 +130,7 @@ Resources:
         - Key: Name
           Value: !Join [ " ", [ !Ref Environment, "PrivatSubnet" ] ]
 
-#====== Privat RouteTables =========	  
+#====== Privat RouteTables =========
   PrivatRouteTables:
     Type: 'AWS::EC2::RouteTable'
     Properties:
@@ -139,7 +139,7 @@ Resources:
         - Key: Name
           Value: !Join [ " ", [ !Ref Environment, "PrivatRouteTables" ] ]
 
-#======= Routes for Privat Subnet RouteTables with IGW 
+#======= Routes for Privat Subnet RouteTables with IGW
   PrivatRoute:
     Type: 'AWS::EC2::Route'
     Properties:
@@ -180,13 +180,15 @@ Resources:
     Type: 'AWS::EC2::Instance'
     Properties:
       InstanceType: !Ref NATGWInstanceTypeParameter
-      ImageId: !FindInMap 
+      ImageId: !FindInMap
         - RegionMap
         - !Ref 'AWS::Region'
         - AMI
       KeyName: !Ref KeyName
       SourceDestCheck: false
       Tags:
+        - Key: VM
+          Value: NATGW
         - Key: Name
           Value: !Join [ " ", [ !Ref Environment, "NATGW" ] ]
       NetworkInterfaces:
@@ -196,14 +198,14 @@ Resources:
           DeviceIndex: '0'
           DeleteOnTermination: 'true'
           SubnetId: !Ref PublicSubnet
-      UserData: 
-        Fn::Base64: 
-          Fn::Sub: 
+      UserData:
+        Fn::Base64:
+          Fn::Sub:
             - |
-              #!/bin/bash -xe 
-              sed -i "s/net.ipv4.ip_forward = 0/net.ipv4.ip_forward = 1/" /etc/sysctl.conf 
-              sysctl -p 
-              echo "iptables -t nat -A POSTROUTING -s ${VPCCIDR} -j MASQUERADE" >> /etc/rc.local 
+              #!/bin/bash -xe
+              sed -i "s/net.ipv4.ip_forward = 0/net.ipv4.ip_forward = 1/" /etc/sysctl.conf
+              sysctl -p
+              echo "iptables -t nat -A POSTROUTING -s ${VPCCIDR} -j MASQUERADE" >> /etc/rc.local
               iptables -t nat -A POSTROUTING -s ${VPCCIDR} -j MASQUERADE
             - VPCCIDR: !Ref VPCBlock
 
@@ -255,12 +257,17 @@ Resources:
 Outputs:
   NATGWIP:
     Description: Public IP address of the newly created EC2 instance
-    Value: !GetAtt 
+    Value: !GetAtt
       - NATGWInstance
       - PublicIp
+  # BackEndIP:
+  #   Description: Public IP address of the newly created EC2 instance
+  #   Value: !GetAtt
+  #     - PrivatInstance
+  #     - LocalIp
   NATGWDNS:
     Description: Public DNSName of the newly created EC2 instance
-    Value: !GetAtt 
+    Value: !GetAtt
       - NATGWInstance
       - PublicDnsName
   NATGWInstanceId:
@@ -280,7 +287,7 @@ Outputs:
      Value: !GetAtt PublicServer.Outputs.ZabbixPublicDNS
   ZabbixInstanceId:
      Value: !GetAtt PublicServer.Outputs.ZabbixInstanceId
-     
+
 Mappings:
   RegionMap:
     ap-south-1:

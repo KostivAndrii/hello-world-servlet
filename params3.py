@@ -7,7 +7,7 @@ import argparse
 
 # import boto3
 import boto.cloudformation
-import boto3
+# import boto3
 
 # conn = boto.cloudformation.connection.CloudFormationConnection()
 # conn.create_stack('mystack', template_body="ec2.yaml", template_url=None, parameters=], notification_arns=[, disable_rollback=False, timeout_in_minutes=None, capabilities=None)
@@ -47,11 +47,9 @@ def write_json(outputfile, data, KeyName, ValueName):
     output.close()
     return OutputParam
 
-
 def run(cmd):
     stdout = os.popen(cmd).read()
     return stdout
-
 
 def create_cf_boto(cf_stack, cf_template_url, parameters, tags):
     cf_param = [ (paramm, parameters[paramm]) for paramm in parameters ]
@@ -76,12 +74,12 @@ def main():
         print('wrong env - we process only', allowed_action)
         sys.exit()
 
-    s3 = boto3.resource('s3')
-    # Print out bucket names
-    for bucket in s3.buckets.all():
-        print(bucket.name)
-    data = open(args.cloud_formation, 'rb')
-    s3.Bucket('cf-yaml-s3-bucket').put_object(Key=args.cloud_formation, Body=data)
+    # s3 = boto3.resource('s3')
+    # # Print out bucket names
+    # for bucket in s3.buckets.all():
+    #     print(bucket.name)
+    # data = open(args.cloud_formation, 'rb')
+    # s3.Bucket('cf-yaml-s3-bucket').put_object(Key=args.cloud_formation, Body=data)
 
     print("script will convert %s into parameters.json and tags.json for ENVIRONMENT %s and %s STACK %s" \
         % (args.input, args.env, args.action, args.stack) )
@@ -120,8 +118,6 @@ def main():
         template_url = 'https://s3-external-1.amazonaws.com/cf-templates-1ldvye973texh-us-east-1/20191539Ae-cf-natgw-tomcatuumsynh895'
         stdout = create_cf_boto(args.stack, template_url, parameters, tags)
         print('stdout = ', stdout)
-
-
 
 if __name__ == "__main__":
     # execute only if run as a script

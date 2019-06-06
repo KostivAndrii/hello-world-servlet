@@ -4,11 +4,11 @@ import os
 import json
 import yaml
 import argparse
-import boto.cloudformation
+# import boto.cloudformation
 import boto3
 import uuid
 
-allowed_env = ['DEV','QA','TEST']
+# allowed_env = ['DEV','QA','TEST']
 allowed_action = ['CREATE', 'UPDATE', 'TEST', 'BOTO']
 
 def read_cfg(inputfile):
@@ -36,14 +36,18 @@ def write_json(outputfile, data, KeyName, ValueName):
     # print('OutputParam =', OutputParam)
     return OutputParam
 
-
 def run(cmd):
     return os.popen(cmd).read()
-
 
 def create_bucket_name(bucket_prefix):
     # The generated bucket name must be between 3 and 63 chars long
     return ''.join([bucket_prefix, str(uuid.uuid4())])
+
+def create_temp_file(size, file_name, file_content):
+    random_file_name = ''.join([str(uuid.uuid4().hex[:6]), file_name])
+    with open(random_file_name, 'w') as f:
+        f.write(str(file_content) * size)
+    return random_file_name
 
 def create_bucket(bucket_prefix, s3_connection):
     session = boto3.session.Session()
@@ -56,19 +60,9 @@ def create_bucket(bucket_prefix, s3_connection):
     print(bucket_name, current_region)
     return bucket_name, bucket_response
 
-def get_obj_url(s3_resource, s3_bucket, s3_key):
-    # s3.client = s3_resource.meta.client
-    bucket_location = s3_resource.meta.client.get_bucket_location(Bucket=s3_bucket)
+def get_obj_url(s3_client, s3_bucket, s3_key):
+    bucket_location = s3_client.get_bucket_location(Bucket=s3_bucket)
     return "https://{1}.s3.{0}.amazonaws.com/{2}".format(bucket_location['LocationConstraint'], s3_bucket, s3_key)
-# 'https://cf-yaml-s3-bucket.s3.eu-west-3.amazonaws.com/ec2.yaml'
-# 'https://s3-eu-west-3.amazonaws.com/cf-yaml-s3-bucket/ec2.yml'
-# 'https://cf-yaml-s3-bucket.s3.eu-west-3.amazonaws.com/ec2.yml'
-
-def create_temp_file(size, file_name, file_content):
-    random_file_name = ''.join([str(uuid.uuid4().hex[:6]), file_name])
-    with open(random_file_name, 'w') as f:
-        f.write(str(file_content) * size)
-    return random_file_name
 
 def _stack_exists(cf_client, stack_name):
     stacks = cf_client.list_stacks()['StackSummaries']
@@ -79,10 +73,8 @@ def _stack_exists(cf_client, stack_name):
             return True
     return False
 
-
 def main():
     parser = argparse.ArgumentParser(description='Programm to work with AWS')
-    # parser.add_argument("-e","--env", help="Environment name", type=str)
     parser.add_argument("-s","--stack", help="STACK name", type=str)
     parser.add_argument('-a','--action', help='what to do CREATE/UPDATE/BOTO')
     parser.add_argument('-i','--input', help='file with parameters and tags')
@@ -98,16 +90,9 @@ def main():
     # "-s3=cf-yaml-s3-bucket"
 
     args = parser.parse_args()
-    # if args.env not in allowed_env:
-    #     print('wrong env - we process only', allowed_env)
-    #     sys.exit()
     if args.action not in allowed_action:
         print('wrong env - we process only', allowed_action)
         sys.exit()
-    # envir = args['env']
-    # stack = args['stack']
-    # inputfile = args['input']
-    # action = args['action']
 
     print("script will convert %s into parameters.json and tags.json for ENVIRONMENT ... and %s STACK %s" \
         % (args.input, args.action, args.stack) )
@@ -128,7 +113,7 @@ def main():
     # s3_client = s3.meta.client
     # bucket_location = boto3.client('s3').get_bucket_location(Bucket=args.s3)
 
-    # delete args.s3, args.cloud_formation_key
+    # delete previous version args.s3, args.cloud_formation_key
     obj = s3.Object(args.s3, args.cloud_formation_key)
     obj.delete()
 
@@ -141,7 +126,7 @@ def main():
     s3.Bucket(args.s3).put_object(Key=args.cloud_formation_key, Body=data)
 
     # get s3_file_URL
-    object_url = get_obj_url(s3, args.s3, args.cloud_formation_key)
+    object_url = get_obj_url(s3.meta.client, args.s3, args.cloud_formation_key)
 
     # validate templatee
     response = cf_client.validate_template(TemplateURL=object_url)
@@ -162,7 +147,7 @@ def main():
 
     # #  create_bucket
     # first_bucket_name, first_response = create_bucket(bucket_prefix=args.s3, s3_connection=s3.meta.client)
-    # # second_bucket_name, second_response = create_bucket(bucket_prefix='secondpythonbucket', s3_connection=s3_resource)
+    # # second_bucket_name, second_response = create_bucket(bucket_prefix='secondpythonbucket', s3_connection=s3_client)
     # # third_bucket_name, third_response = create_bucket(bucket_prefix='thirdpythonbucket', s3_connection=s3.meta.client)
 
     # first_file_name = create_temp_file(300, 'firstfile.txt', 'f')
@@ -236,31 +221,107 @@ def main():
         # # stdout = create_cf_boto(stack, template_url, parameters, tags)
         # print('stdout = ', stdout)
     ec2 = boto3.resource('ec2')
-    client = boto3.client('ec2')
+    m_client = ec2.meta.client
+    # m_client = boto3.client('ec2')
 
-    response = client.describe_tags(Filters=[{'Key': 'VM', 'Value': 'Tomcat'}])
-    print(response)
-    custom_filter = [{'Name':'tag:VM', 'Values': ['Tomcat']}]
-    response = client.describe_instances(Filters=custom_filter)
-    # for instance in ec2.instances.all():
-    #     print(instance.tags(Filters=custom_filter))
+    custom_filter = [{'Name':'tag:VM', 'Values': ['NATGW']},{'Name': 'instance-state-name', 'Values': ['running']}]
+    response_n = m_client.describe_instances(Filters=custom_filter)
+    custom_filter = [{'Name':'tag:VM', 'Values': ['BackEnd']},{'Name': 'instance-state-name', 'Values': ['running']}]
+    response_b = m_client.describe_instances(Filters=custom_filter)
 
-    cf_client = boto3.client('cloudformation')
-    r = cf_client.describe_stacks(StackName="AWS-NATGW")
-    s, = r['Stacks']
-    outputs = s['Outputs']
+    PublicIpAddress = response_n['Reservations'][0]['Instances'][0]['PublicIpAddress']
+    PrivateIpAddress = response_b['Reservations'][0]['Instances'][0]['PrivateIpAddress']
 
-    out = {}
-    for o in outputs:
-        key = _to_env(o['OutputKey'])
-        out[key] = o['OutputValue']
-    print(json.dumps(out, indent=2))
+    print('NATGW PublicIpAddress = ', PublicIpAddress)
+    print('BackEnd PrivateIpAddress = ', PrivateIpAddress)
 
-import re
-def _to_env(name):
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).upper()
+    ssh_tunnel = '$ ssh -i id_rsa -o "StrictHostKeyChecking no" -f -N -L 12345:' + \
+        PrivateIpAddress + ':22 ec2-user@' + PublicIpAddress
+    print('ssh_tunnel = ', ssh_tunnel)
+    print('stdout = ', run(ssh_tunnel))
 
+    instances = ec2.instances.filter(
+        Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
+    # print('instances = ', instances)
+    # print('')
+    # myinstances = [ instance.id for instance in instances ]
+    # print('myinstances = ', myinstances)
+    # print('')
+    # inst_status = m_client.describe_instance_status(InstanceIds = myinstances)
+    # print('inst_status_my = ', inst_status)
+    # print('')
+    for instance in instances:
+        inst_status = m_client.describe_instance_status(InstanceIds = [instance.id])
+        inst_info = m_client.describe_instances(InstanceIds = [instance.id])
+        print('')
+        print('inst_info = ', inst_info)
+        print('')
+        print("Id1: %s Id2: %s InstanceStatus: %s SystemStatus %s " % (instance.id, \
+            inst_status['InstanceStatuses'][0]['InstanceId'], \
+            inst_status['InstanceStatuses'][0]['InstanceStatus']['Status'],\
+            inst_status['InstanceStatuses'][0]['SystemStatus']['Status']))
+        if inst_status['InstanceStatuses'][0]['SystemStatus']['Status'] == 'initializing':
+            waiter = m_client.get_waiter('system_status_ok')
+            waiter.wait(InstanceIds=[instance.id])
+        if inst_status['InstanceStatuses'][0]['InstanceStatus']['Status'] == 'initializing':
+            waiter = m_client.get_waiter('instance_status_ok')
+            waiter.wait(InstanceIds=[instance.id])
+
+    # cf_client = boto3.client('cloudformation')
+    # r = cf_client.describe_stacks(StackName = args.stack)
+    # s, = r['Stacks']
+    # outputs = s['Outputs']
+    # print('Stacks = ', s)
+    # # print('')
+    # print('outputs = ', outputs)
+
+#     inst_status = m_client.describe_instance_status()
+#     print('inst_status_all = ', inst_status)
+#     print('')
+
+
+#     for instance in ec2.instances.all():
+#         print(instance)
+
+#     client.describe_instance_status()
+
+#     for instance in instances:
+#         print(instance.id, instance.instance_type)
+
+#     client.describe_instance_status(InstanceIds=[     'i-07eb26270d31d946b'   ])
+#     client.describe_instance_status()
+
+#     response = client.describe_tags(Filters=[{'Key': 'VM', 'Value': 'Tomcat'}])
+#     print(response)
+#     custom_filter = [{'Name':'tag:VM', 'Values': ['Tomcat']}]
+#     response = client.describe_instances(Filters=custom_filter)
+#     response = client.describe_instances()
+#     for instance in ec2.instances.all():
+#         print(instance)
+
+#     client.describe_instance_status(InstanceIds=[     'i-01fe2c4814225824a'   ])
+#     client.describe_instance_status()
+
+#     cf_client = boto3.client('cloudformation')
+#     r = cf_client.describe_stacks(StackName="AWS-NATGW")
+#     s, = r['Stacks']
+#     outputs = s['Outputs']
+
+#     out = {}
+#     for o in outputs:
+#         key = _to_env(o['OutputKey'])
+#         out[key] = o['OutputValue']
+#     print(json.dumps(out, indent=2))
+# import boto3
+# import re
+# def _to_env(name):
+#     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+#     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).upper()
+
+# # open tunel from localhost:12345 to BackEnd ssh (10.200.11.96:22) though NATGW (ec2-user@35.180.227.97)
+# $ ssh -i id_rsa -o "StrictHostKeyChecking no" -f -N -L 12345:10.200.11.96:22 ec2-user@35.180.227.97
+# # making ssh connecting to BackEnd though local port localhost:12345
+# $ ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@localhost
 
 if __name__ == "__main__":
     # execute only if run as a script

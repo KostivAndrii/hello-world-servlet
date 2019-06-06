@@ -24,20 +24,20 @@ pipeline {
 //                  sh 'aws cloudformation create-stack --stack-name PROD --template-body file://./ec2.yaml --parameters ParameterKey=KeyName,ParameterValue=$aws_key_name ParameterKey=Environment,ParameterValue=${AWS_ENV} ParameterKey=NATGWInstanceTypeParameter,ParameterValue=t2.micro ParameterKey=VPCBlock,ParameterValue="10.0.0.0/16" ParameterKey=PublicSubnetCIDR,ParameterValue="10.0.10.0/24" ParameterKey=PrivateSubnetCIDR,ParameterValue="10.0.11.0/24"'
                 }
 //                sh 'sleep 120'
-/*                timeout(5) {
+                timeout(5) {
                     waitUntil {
                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
                            script {
                              def StackStatus = sh (
                                     label: 'GET_STACK_STATUS', 
                                     returnStdout: true, 
-                                    script: 'aws cloudformation describe-stacks --query "Stacks[*].StackStatus" --output=text --stack-name PROD').trim()
+                                    script: 'aws cloudformation describe-stacks --query "Stacks[*].StackStatus" --output=text --stack-name AWS-NATGW').trim()
 //                             def StackStatus = sh script: 'aws cloudformation describe-stacks --query "Stacks[*].StackStatus" --output=text --stack-name PROD', returnStatus: true
                              echo StackStatus
                              return (StackStatus == 'CREATE_COMPLETE'); 
                            }
                        }
-                    } */
+                    } 
                 }                
 //                waitUntil {    // some block }
 //                sh './aws_create.sh'

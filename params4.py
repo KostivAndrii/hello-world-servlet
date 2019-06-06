@@ -224,6 +224,7 @@ def main():
     m_client = ec2.meta.client
     # m_client = boto3.client('ec2')
 
+    # inst_info = m_client.describe_instances(InstanceIds = [instance.id])
     custom_filter = [{'Name':'tag:VM', 'Values': ['NATGW']},{'Name': 'instance-state-name', 'Values': ['running']}]
     response_n = m_client.describe_instances(Filters=custom_filter)
     custom_filter = [{'Name':'tag:VM', 'Values': ['BackEnd']},{'Name': 'instance-state-name', 'Values': ['running']}]
@@ -235,9 +236,10 @@ def main():
     print('NATGW PublicIpAddress = ', PublicIpAddress)
     print('BackEnd PrivateIpAddress = ', PrivateIpAddress)
 
-    ssh_tunnel = '$ ssh -i id_rsa -o "StrictHostKeyChecking no" -f -N -L 12345:' + \
+    ssh_tunnel = 'ssh -i id_rsa -o "StrictHostKeyChecking no" -f -N -L 12345:' + \
         PrivateIpAddress + ':22 ec2-user@' + PublicIpAddress
     print('ssh_tunnel = ', ssh_tunnel)
+    print('ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@localhost')
     print('stdout = ', run(ssh_tunnel))
 
     instances = ec2.instances.filter(
@@ -252,10 +254,6 @@ def main():
     # print('')
     for instance in instances:
         inst_status = m_client.describe_instance_status(InstanceIds = [instance.id])
-        inst_info = m_client.describe_instances(InstanceIds = [instance.id])
-        print('')
-        print('inst_info = ', inst_info)
-        print('')
         print("Id1: %s Id2: %s InstanceStatus: %s SystemStatus %s " % (instance.id, \
             inst_status['InstanceStatuses'][0]['InstanceId'], \
             inst_status['InstanceStatuses'][0]['InstanceStatus']['Status'],\

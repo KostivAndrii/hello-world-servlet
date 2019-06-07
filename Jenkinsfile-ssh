@@ -1,0 +1,33 @@
+pipeline {
+    agent any
+    stages {
+        stage("Deployment") {
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
+                    script {
+                      EC2_IP = sh (label: 'GET_AWS_IP', returnStdout: true, script: 'aws ec2 describe-instances --query "Reservations[*].Instances[*].PublicIpAddress" --output=text --filter Name=tag:VM,Values=Tomcat').trim()
+                      env.EC2_IP = EC2_IP
+                    }
+                }
+                sh 'pwd'
+                sh 'ls -la'
+                sshagent([aws-test-oregon]) {
+                      sh 'ssh -o "StrictHostKeyChecking no" ec2-user@${EC2_IP} sudo rm -rf /opt/tomcat/webapps/hello-world.war'
+                      sh 'scp ./hello-world.war ec2-user@${EC2_IP}:/home/ec2-user/'
+                      sh 'ssh ec2-user@${EC2_IP} sudo mv -f /home/ec2-user/hello-world.war /opt/tomcat/webapps/hello-world.war'
+                      sh 'ssh ec2-user@${EC2_IP} sudo chown tomcat: /opt/tomcat/webapps/hello-world.war'
+                }
+            }
+        }
+        stage("Deploy to Dev") {
+            steps {
+              sh 'mv target/*.war target/myweb.war'
+              sshagent(['aws-test-oregon']) {
+                sh 'ssh ec2-user@172.31.17.196 rm -rf /opt/tomcat8/webapps/myweb*'
+                sh 'scp target/myweb.war ec2-user@172.31.17.196:/opt/tomcat8/webapps/'
+                sh 'ssh ec2-user@172.31.17.196 sudo service tomcat restart'
+              }
+            }
+        }
+    }
+}

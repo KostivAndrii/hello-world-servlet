@@ -1,0 +1,63 @@
+pipeline {
+    agent any
+    stages {
+        stage("Deployment") {
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
+                    sh './param.py -s=AWS-NATGW -a=BOTO -i=my_cfg.yaml -cf=ec2.yaml -cfk=ec2.yaml -s3=cf-yaml-s3-bucket'
+                }
+                sh 'pwd'
+                sh 'ls -la'
+                sshagent([aws-test-oregon]) {
+                      sh 'ssh -o "StrictHostKeyChecking no" ec2-user@${EC2_IP} sudo rm -rf /opt/tomcat/webapps/hello-world.war'
+                      sh 'scp ./hello-world.war ec2-user@${EC2_IP}:/home/ec2-user/'
+                      sh 'ssh ec2-user@${EC2_IP} sudo mv -f /home/ec2-user/hello-world.war /opt/tomcat/webapps/hello-world.war'
+                      sh 'ssh ec2-user@${EC2_IP} sudo chown tomcat: /opt/tomcat/webapps/hello-world.war'
+                }
+            }
+        }
+        stage("Deploy to Dev") {
+            steps {
+              sh 'mv target/*.war target/myweb.war'
+              sshagent(['aws-test-oregon']) {
+                sh 'ssh ec2-user@172.31.17.196 rm -rf /opt/tomcat8/webapps/myweb*'
+                sh 'scp target/myweb.war ec2-user@172.31.17.196:/opt/tomcat8/webapps/'
+                sh 'ssh ec2-user@172.31.17.196 sudo service tomcat restart'
+              }
+            }
+        }
+    }
+}
+
+
+pipeline {
+    agent any
+    stages {
+        stage("Deployment") {
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
+                    sh './param.py -s=AWS-NATGW -a=BOTO -i=my_cfg.yaml -cf=ec2.yaml -cfk=ec2.yaml -s3=cf-yaml-s3-bucket'
+                }
+                sh 'pwd'
+                sh 'ls -la'
+                sshagent([aws-test-oregon]) {
+                      sh 'ssh -o "StrictHostKeyChecking no" ec2-user@${EC2_IP} sudo rm -rf /opt/tomcat/webapps/hello-world.war'
+                      sh 'scp ./hello-world.war ec2-user@${EC2_IP}:/home/ec2-user/'
+                      sh 'ssh ec2-user@${EC2_IP} sudo mv -f /home/ec2-user/hello-world.war /opt/tomcat/webapps/hello-world.war'
+                      sh 'ssh ec2-user@${EC2_IP} sudo chown tomcat: /opt/tomcat/webapps/hello-world.war'
+                }
+            }
+        }
+        stage("Deploy to Dev") {
+            steps {
+              sh 'mv target/*.war target/myweb.war'
+              sshagent(['aws-test-oregon']) {
+                sh 'ssh ec2-user@172.31.17.196 rm -rf /opt/tomcat8/webapps/myweb*'
+                sh 'scp target/myweb.war ec2-user@172.31.17.196:/opt/tomcat8/webapps/'
+                sh 'ssh ec2-user@172.31.17.196 sudo service tomcat restart'
+              }
+            }
+        }
+    }
+}
+

@@ -17,7 +17,7 @@ pipeline {
                 echo 'Creating environment in AWS and CM Tomcat there'
                 sh 'pwd'
                 sh 'ls -la'
-                sshagent([aws-test-oregon]) {
+                sshagent('aws-test-oregon') {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
                         sh './paramc.py -s=AWS-NATGW -a=BOTO -i=my_cfg.yaml -cf=ec2.yaml -cfk=ec2.yaml -s3=cf-yaml-s3-bucket'
     /*                  sh 'aws cloudformation validate-template --template-body file://./ec2.yaml'
@@ -26,7 +26,7 @@ pipeline {
                         sh 'aws cloudformation create-stack --stack-name PROD --template-body file://./ec2.yaml --parameters ParameterKey=KeyName,ParameterValue=$aws_key_name ParameterKey=Environment,ParameterValue=${AWS_ENV} ParameterKey=NATGWInstanceTypeParameter,ParameterValue=t2.micro ParameterKey=VPCBlock,ParameterValue="10.0.0.0/16" ParameterKey=PublicSubnetCIDR,ParameterValue="10.0.10.0/24" ParameterKey=PrivateSubnetCIDR,ParameterValue="10.0.11.0/24"'
     */
                     }
-/*                sshagent([aws-test-oregon]) {
+/*                sshagent('aws-test-oregon') {
                       sh 'ssh -o "StrictHostKeyChecking no" ec2-user@${EC2_IP} sudo rm -rf /opt/tomcat/webapps/hello-world.war'
                       sh 'scp ./hello-world.war ec2-user@${EC2_IP}:/home/ec2-user/'
                       sh 'ssh ec2-user@${EC2_IP} sudo mv -f /home/ec2-user/hello-world.war /opt/tomcat/webapps/hello-world.war'

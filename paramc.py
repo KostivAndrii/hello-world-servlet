@@ -197,9 +197,9 @@ def main():
     tun_sh.flush()
     tun_sh.close()
 
-    print('ssh_tunnel = ', ssh_tunnel)
-    print('ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@localhost')
-    print('stdout = ', run(ssh_tunnel))
+    # print('ssh_tunnel = ', ssh_tunnel)
+    # print('ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@localhost')
+    # print('stdout = ', run(ssh_tunnel))
 
 
 if __name__ == "__main__":

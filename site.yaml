@@ -12,3 +12,8 @@
     - tomcat
     - zabbix-agent
 
+- hosts: backend
+  become: yes
+  gather_facts: true
+  roles:
+    - mysql

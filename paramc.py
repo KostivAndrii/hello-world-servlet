@@ -180,7 +180,7 @@ def main():
     response_b = ec2_client.describe_instances(Filters=custom_filter)
     PrivateIpAddress = response_b['Reservations'][0]['Instances'][0]['PrivateIpAddress']
 
-    ssh_tunnel = 'ssh -M 20000 -o "StrictHostKeyChecking no" -f -N -L 12345:' + \
+    ssh_tunnel = 'ssh -o "StrictHostKeyChecking no" -f -N -L 12345:' + \
         PrivateIpAddress + ':22 ec2-user@' + PublicIpAddress
     # ssh_tunnel1 = 'ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@' + PublicIpAddress + ' '
     print(ssh_tunnel)

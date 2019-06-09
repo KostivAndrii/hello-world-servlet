@@ -189,7 +189,7 @@ def main():
     # run(ssh_tunnel)
     
     try:
-        tun_sh=open('tunnel.sh', 'w+')
+        tun_sh=open('tunnel.sh', 'a')
     except FileNotFoundError:
         print("can''t open destiantion file %s " % outputfile)
         sys.exit(2)

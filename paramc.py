@@ -97,6 +97,8 @@ def main():
     parser.add_argument('-s3','--s3', help='file with parameters and tags')
     args = parser.parse_args()
 
+    sys.stdout.flush()
+
     if args.action not in allowed_action:
         print('wrong action - we process only', allowed_action)
         sys.exit()
@@ -168,9 +170,7 @@ def main():
             waiter = ec2_client.get_waiter('instance_status_ok')
             waiter.wait(InstanceIds=[instance.id])
 
-
     # preparion scripts for tunelling
-
     # inst_info = ec2_client.describe_instances(InstanceIds = [instance.id])
     custom_filter = [{'Name':'tag:VM', 'Values': ['NATGW']},{'Name': 'instance-state-name', 'Values': ['running']}]
     response_n = ec2_client.describe_instances(Filters=custom_filter)
@@ -180,13 +180,13 @@ def main():
     response_b = ec2_client.describe_instances(Filters=custom_filter)
     PrivateIpAddress = response_b['Reservations'][0]['Instances'][0]['PrivateIpAddress']
 
-    ssh_tunnel = 'ssh -i id_rsa -o "StrictHostKeyChecking no" -f -N -L 12345:' + \
+    ssh_tunnel = 'ssh -o "StrictHostKeyChecking no" -f -N -L 12345:' + \
         PrivateIpAddress + ':22 ec2-user@' + PublicIpAddress
-    ssh_tunnel1 = 'ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@' + PublicIpAddress + ' '
+    # ssh_tunnel1 = 'ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@' + PublicIpAddress + ' '
     print(ssh_tunnel)
     # print('stdout = ', run(ssh_tunnel))
-    # print('stdout = ', run(ssh_tunnel1))
-    run(ssh_tunnel)
+        # print('stdout = ', run(ssh_tunnel1))
+    # run(ssh_tunnel)
     
     try:
         tun_sh=open('tunnel.sh', 'w+')

@@ -203,7 +203,8 @@ Resources:
           Fn::Sub:
             - |
               #!/bin/bash -xe
-              sed -i "s/net.ipv4.ip_forward = 0/net.ipv4.ip_forward = 1/" /etc/sysctl.conf
+              #sed -i "s/net.ipv4.ip_forward = 0/net.ipv4.ip_forward = 1/" /etc/sysctl.conf
+              echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
               sysctl -p
               echo "iptables -t nat -A POSTROUTING -s ${VPCCIDR} -j MASQUERADE" >> /etc/rc.local
               iptables -t nat -A POSTROUTING -s ${VPCCIDR} -j MASQUERADE
@@ -214,7 +215,8 @@ Resources:
   PublicServer:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019132zxS-tomcat-v.2.15nqofc8lky2
+      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/20191600o4-tomcat-v.2.151q0r88wxjya
+#      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019132zxS-tomcat-v.2.15nqofc8lky2
 #-      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019132EtT-tomcat-v.2.169cpniu2tucc
 #+      TemplateURL: https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019132sGl-tomcat-v2.17358iysj0op
       TimeoutInMinutes: '60'
@@ -300,7 +302,7 @@ Mappings:
     eu-west-2:
       AMI: ami-0664a710233d7c148
     eu-west-1:
-      AMI: ami-0fad7378adf284ce0
+      AMI: mi-030dbca661d402413
     ap-northeast-2:
       AMI: ami-018a9a930060d38aa
     ap-northeast-1:

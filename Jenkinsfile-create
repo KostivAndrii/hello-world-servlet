@@ -25,9 +25,10 @@ pipeline {
                     sh 'aws cloudformation create-stack --stack-name PROD --template-body file://./ec2.yaml --parameters file://./params.json --tags file://./tags.json'
                     sh 'aws cloudformation create-stack --stack-name PROD --template-body file://./ec2.yaml --parameters ParameterKey=KeyName,ParameterValue=$aws_key_name ParameterKey=Environment,ParameterValue=${AWS_ENV} ParameterKey=NATGWInstanceTypeParameter,ParameterValue=t2.micro ParameterKey=VPCBlock,ParameterValue="10.0.0.0/16" ParameterKey=PublicSubnetCIDR,ParameterValue="10.0.10.0/24" ParameterKey=PrivateSubnetCIDR,ParameterValue="10.0.11.0/24"'
 */
-                sshagent(['aws-test-oregon']) {
+/*                sshagent(['aws-test-oregon']) {
                     sh './tunnel.sh'
                     }
+*/
 /*                sshagent('aws-test-oregon') {
                       sh 'ssh -o "StrictHostKeyChecking no" ec2-user@${EC2_IP} sudo rm -rf /opt/tomcat/webapps/hello-world.war'
                       sh 'scp ./hello-world.war ec2-user@${EC2_IP}:/home/ec2-user/'
@@ -65,19 +66,22 @@ pipeline {
                         credentialsId: 'aws-test-oregon', 
                         disableHostKeyChecking: true, 
                         installation: 'Ansible', 
-                        inventory: './backend', 
-                        playbook: './mysql.yaml'
+                        inventory: './inventory/ec2.py', 
+                        limit: 'tag_VM_Tomcat:tag_VM_Zabbix', 
+                        playbook: './site.yaml'
                     )
                 }
+                sshagent(['aws-test-oregon']) {
+                    sh './tunnel.sh'
+                    }
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
                     ansiblePlaybook (
                         colorized: true, 
                         credentialsId: 'aws-test-oregon', 
                         disableHostKeyChecking: true, 
                         installation: 'Ansible', 
-                        inventory: './inventory/ec2.py', 
-                        limit: 'tag_VM_Tomcat:tag_VM_Zabbix', 
-                        playbook: './site.yaml'
+                        inventory: './backend', 
+                        playbook: './mysql.yaml'
                     )
                 }
             }

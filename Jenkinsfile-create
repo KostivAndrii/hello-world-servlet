@@ -17,7 +17,7 @@ pipeline {
                 echo 'Creating environment in AWS and CM Tomcat there'
                 sh 'pwd'
                 sh 'ls -la'
-                sshagent('aws-test-oregon') {
+                sshagent(['aws-test-oregon']) {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
                         sh './paramc.py -s=AWS-NATGW -a=BOTO -i=my_cfg.yaml -cf=ec2.yaml -cfk=ec2.yaml -s3=cf-yaml-s3-bucket'
     /*                  sh 'aws cloudformation validate-template --template-body file://./ec2.yaml'

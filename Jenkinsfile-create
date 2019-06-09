@@ -60,6 +60,21 @@ pipeline {
                 echo 'Appying CM'
                 sh 'pwd'
                 sh 'ls -la'
+                sshagent(['aws-test-oregon']) {
+                    sh 'pwd'
+                    sh './tunnel.sh'
+                    sh 'echo "Openning tunnel"'
+                }
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
+                    ansiblePlaybook (
+                        colorized: true, 
+                        credentialsId: 'aws-test-oregon', 
+                        disableHostKeyChecking: true, 
+                        installation: 'Ansible', 
+                        inventory: './backend', 
+                        playbook: './mysql.yaml'
+                    )
+                }
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
                     ansiblePlaybook (
                         colorized: true, 
@@ -69,19 +84,6 @@ pipeline {
                         inventory: './inventory/ec2.py', 
                         limit: 'tag_VM_Tomcat:tag_VM_Zabbix', 
                         playbook: './site.yaml'
-                    )
-                }
-                sshagent(['aws-test-oregon']) {
-                    sh './tunnel.sh'
-                    }
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
-                    ansiblePlaybook (
-                        colorized: true, 
-                        credentialsId: 'aws-test-oregon', 
-                        disableHostKeyChecking: true, 
-                        installation: 'Ansible', 
-                        inventory: './backend', 
-                        playbook: './mysql.yaml'
                     )
                 }
             }

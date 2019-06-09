@@ -186,7 +186,7 @@ def main():
     print(ssh_tunnel)
     # print('stdout = ', run(ssh_tunnel))
         # print('stdout = ', run(ssh_tunnel1))
-    # run(ssh_tunnel)
+    print('run ssh_tunell',run(ssh_tunnel)
     
     try:
         tun_sh=open('tunnel.sh', 'a')

@@ -19,7 +19,7 @@ pipeline {
                 sh 'ls -la'
                 sshagent([aws-test-oregon]) {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
-                        sh './param.py -s=AWS-NATGW -a=BOTO -i=my_cfg.yaml -cf=ec2.yaml -cfk=ec2.yaml -s3=cf-yaml-s3-bucket'
+                        sh './paramc.py -s=AWS-NATGW -a=BOTO -i=my_cfg.yaml -cf=ec2.yaml -cfk=ec2.yaml -s3=cf-yaml-s3-bucket'
     /*                  sh 'aws cloudformation validate-template --template-body file://./ec2.yaml'
                         sh 'aws cloudformation validate-template --template-url https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019132EtT-tomcat-v.2.169cpniu2tucc'
                         sh 'aws cloudformation create-stack --stack-name PROD --template-body file://./ec2.yaml --parameters file://./params.json --tags file://./tags.json'

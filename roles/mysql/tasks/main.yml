@@ -47,7 +47,7 @@
     name: "{{ mysql_db }}"
     state: present
     collation: utf8_general_ci
-  when: mysql_db != none
+  when: mysql_db != "none"
 
 - name: Create a database user
   mysql_user:
@@ -57,11 +57,11 @@
     state: present
     host: '%'
   register: db_echo
-  when: mysql_db != none
+  when: mysql_db != "none"
 
 - name: store {{ mysql_db }} userpassword /root/.my.cnf
   shell: |
     echo "[client{{ mysql_db }}]
     user={{ mysql_db }}
     password={{ mysql_user_password }}" >> /root/.my.cnf
-  when: (db_echo is succeeded) and (mysql_db != none)
+  when: (db_echo is succeeded) and (mysql_db != "none")

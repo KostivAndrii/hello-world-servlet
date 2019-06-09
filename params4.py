@@ -81,13 +81,13 @@ def main():
     parser.add_argument('-cf','--cloud-formation', help='file with parameters and tags')
     parser.add_argument('-cfk','--cloud-formation-key', help='file with parameters and tags')
     parser.add_argument('-s3','--s3', help='file with parameters and tags')
-    # "-e=TEST",
-    # "-s=AWS-NATGW",
-    # "-a=BOTO",
-    # "-i=my_cfg.yaml",
-    # "-cf=ec2.yaml",
-    # "-cfk=ec2.yaml",
-    # "-s3=cf-yaml-s3-bucket"
+    "-e=TEST",
+    "-s=AWS-NATGW",
+    "-a=BOTO",
+    "-i=my_cfg.yaml",
+    "-cf=ec2.yaml",
+    "-cfk=ec2.yaml",
+    "-s3=cf-yaml-s3-bucket"
 
     args = parser.parse_args()
     if args.action not in allowed_action:

@@ -65,9 +65,8 @@ pipeline {
                         credentialsId: 'aws-test-oregon', 
                         disableHostKeyChecking: true, 
                         installation: 'Ansible', 
-                        inventory: './inventory/ec2.py', 
-                        limit: 'tag_VM_Tomcat:tag_VM_Zabbix', 
-                        playbook: './site.yaml'
+                        inventory: './backend', 
+                        playbook: './mysql.yaml'
                     )
                 }
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
@@ -76,7 +75,8 @@ pipeline {
                         credentialsId: 'aws-test-oregon', 
                         disableHostKeyChecking: true, 
                         installation: 'Ansible', 
-                        inventory: './backend', 
+                        inventory: './inventory/ec2.py', 
+                        limit: 'tag_VM_Tomcat:tag_VM_Zabbix', 
                         playbook: './site.yaml'
                     )
                 }

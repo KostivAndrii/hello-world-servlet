@@ -151,25 +151,7 @@ def main():
     ec2_client = ec2.meta.client
     # ec2_client = boto3.client('ec2')
 
-    # inst_info = ec2_client.describe_instances(InstanceIds = [instance.id])
-    custom_filter = [{'Name':'tag:VM', 'Values': ['NATGW']},{'Name': 'instance-state-name', 'Values': ['running']}]
-    response_n = ec2_client.describe_instances(Filters=custom_filter)
-    custom_filter = [{'Name':'tag:VM', 'Values': ['BackEnd']},{'Name': 'instance-state-name', 'Values': ['running']}]
-    response_b = ec2_client.describe_instances(Filters=custom_filter)
-
-    PublicIpAddress = response_n['Reservations'][0]['Instances'][0]['PublicIpAddress']
-    PrivateIpAddress = response_b['Reservations'][0]['Instances'][0]['PrivateIpAddress']
-
-    print('NATGW PublicIpAddress = ', PublicIpAddress)
-    print('BackEnd PrivateIpAddress = ', PrivateIpAddress)
-
-    ssh_tunnel1 = 'ssh -i id_rsa -o "StrictHostKeyChecking no" ec2-user@' + PublicIpAddress + ' '
-    ssh_tunnel = 'ssh -i id_rsa -o "StrictHostKeyChecking no" -f -N -L 12345:' + \
-        PrivateIpAddress + ':22 ec2-user@' + PublicIpAddress
-    print('ssh_tunnel = ', ssh_tunnel)
-    print('ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@localhost')
-    print('stdout = ', run(ssh_tunnel))
-
+    # waiting for finishing instances initialization
     instances = ec2.instances.filter(
         Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
 
@@ -185,6 +167,39 @@ def main():
         if inst_status['InstanceStatuses'][0]['InstanceStatus']['Status'] == 'initializing':
             waiter = ec2_client.get_waiter('instance_status_ok')
             waiter.wait(InstanceIds=[instance.id])
+
+
+    # preparion scripts for tunelling
+
+    # inst_info = ec2_client.describe_instances(InstanceIds = [instance.id])
+    custom_filter = [{'Name':'tag:VM', 'Values': ['NATGW']},{'Name': 'instance-state-name', 'Values': ['running']}]
+    response_n = ec2_client.describe_instances(Filters=custom_filter)
+    PublicIpAddress = response_n['Reservations'][0]['Instances'][0]['PublicIpAddress']
+
+    custom_filter = [{'Name':'tag:VM', 'Values': ['BackEnd']},{'Name': 'instance-state-name', 'Values': ['running']}]
+    response_b = ec2_client.describe_instances(Filters=custom_filter)
+    PrivateIpAddress = response_b['Reservations'][0]['Instances'][0]['PrivateIpAddress']
+
+    ssh_tunnel = 'ssh -i id_rsa -o "StrictHostKeyChecking no" -f -N -L 12345:' + \
+        PrivateIpAddress + ':22 ec2-user@' + PublicIpAddress
+    ssh_tunnel1 = 'ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@' + PublicIpAddress + ' '
+    print(ssh_tunnel)
+    # print('stdout = ', run(ssh_tunnel))
+    # print('stdout = ', run(ssh_tunnel1))
+    run(ssh_tunnel)
+    
+    try:
+        tun_sh=open('tunnel.sh', 'w+')
+    except FileNotFoundError:
+        print("can''t open destiantion file %s " % outputfile)
+        sys.exit(2)
+    tun_sh.write("%s\r\n" % ssh_tunnel)
+    tun_sh.flush()
+    tun_sh.close()
+
+    print('ssh_tunnel = ', ssh_tunnel)
+    print('ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@localhost')
+    print('stdout = ', run(ssh_tunnel))
 
 
 if __name__ == "__main__":

@@ -7,3 +7,4 @@ ssh -o "StrictHostKeyChecking no" -f -N -L 12345:10.200.11.43:22 ec2-user@35.180
 ssh -o "StrictHostKeyChecking no" -f -N -L 12345:10.200.11.217:22 ec2-user@35.180.88.110
 ssh -o "StrictHostKeyChecking no" -f -N -L 12345:10.200.11.208:22 ec2-user@35.180.85.186
 ssh -o "StrictHostKeyChecking no" -f -N -L 12345:10.200.11.249:22 ec2-user@52.47.128.228
+ssh -o "StrictHostKeyChecking no" -f -N -L 12345:10.200.11.103:22 ec2-user@35.180.159.10

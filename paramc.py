@@ -234,7 +234,31 @@ def main():
 
 # ansible -i hosts backend -m ping
 # ssh -F config 10.200.11.208
+# ./config
+# ### jump server ###
+# Host bastion
+#     HostName 35.180.159.10
+#     Port 22
+#     User ec2-user
+#     StrictHostKeyChecking no
+#     ForwardAgent yes
 
+# Host db
+#     HostName 10.200.11.103
+#     ProxyJump bastion
+#     Port 22
+#     User ec2-user
+#     StrictHostKeyChecking no
+#     ForwardAgent yes
+
+# # inventory
+# [gate]
+# bastion
+# [backend]
+# db
+# [all:vars]
+# ansible_ssh_user=ec2-user
+# ansible_ssh_common_args='-F config'
 
 if __name__ == "__main__":
     # execute only if run as a script

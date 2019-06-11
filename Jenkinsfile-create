@@ -2,7 +2,7 @@ pipeline {
     agent any
     parameters {
       string(defaultValue: "STAGE", description: 'What environment?', name: 'AWS_ENV')
-    }        
+    }
     environment {
         aws_key_name = 'aws-test-oregon'
     }
@@ -11,7 +11,7 @@ pipeline {
             steps {
                 git branch: 'develop', url: "https://github.com/KostivAndrii/hello-world-servlet.git"
             }
-        } 
+        }
         stage ('Create AWS') {
             steps {
                 echo 'Creating environment in AWS and CM Tomcat there'
@@ -19,42 +19,26 @@ pipeline {
                 sh 'ls -la'
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
                     sh 'python3 -u ./paramc.py -s=AWS-NATGW -a=BOTO -i=my_cfg.yaml -cf=ec2.yaml -cfk=ec2.yaml -s3=cf-yaml-s3-bucket'
-/*                  sh './paramc.py -s=AWS-NATGW -a=BOTO -i=my_cfg.yaml -cf=ec2.yaml -cfk=ec2.yaml -s3=cf-yaml-s3-bucket'
-                    sh 'aws cloudformation validate-template --template-body file://./ec2.yaml'
-                    sh 'aws cloudformation validate-template --template-url https://s3.eu-west-3.amazonaws.com/cf-templates-1ldvye973texh-eu-west-3/2019132EtT-tomcat-v.2.169cpniu2tucc'
-                    sh 'aws cloudformation create-stack --stack-name PROD --template-body file://./ec2.yaml --parameters file://./params.json --tags file://./tags.json'
-                    sh 'aws cloudformation create-stack --stack-name PROD --template-body file://./ec2.yaml --parameters ParameterKey=KeyName,ParameterValue=$aws_key_name ParameterKey=Environment,ParameterValue=${AWS_ENV} ParameterKey=NATGWInstanceTypeParameter,ParameterValue=t2.micro ParameterKey=VPCBlock,ParameterValue="10.0.0.0/16" ParameterKey=PublicSubnetCIDR,ParameterValue="10.0.10.0/24" ParameterKey=PrivateSubnetCIDR,ParameterValue="10.0.11.0/24"'
-*/
-/*                sshagent(['aws-test-oregon']) {
-                    sh './tunnel.sh'
-                    }
-*/
-/*                sshagent('aws-test-oregon') {
-                      sh 'ssh -o "StrictHostKeyChecking no" ec2-user@${EC2_IP} sudo rm -rf /opt/tomcat/webapps/hello-world.war'
-                      sh 'scp ./hello-world.war ec2-user@${EC2_IP}:/home/ec2-user/'
-                      sh 'ssh ec2-user@${EC2_IP} sudo mv -f /home/ec2-user/hello-world.war /opt/tomcat/webapps/hello-world.war'
-                      sh 'ssh ec2-user@${EC2_IP} sudo chown tomcat: /opt/tomcat/webapps/hello-world.war'
-*/
                 }
                 timeout(5) {
                     waitUntil {
                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
                            script {
                              def StackStatus = sh (
-                                    label: 'GET_STACK_STATUS', 
-                                    returnStdout: true, 
+                                    label: 'GET_STACK_STATUS',
+                                    returnStdout: true,
                                     script: 'aws cloudformation describe-stacks --query "Stacks[*].StackStatus" --output=text --stack-name AWS-NATGW').trim()
 //                             def StackStatus = sh script: 'aws cloudformation describe-stacks --query "Stacks[*].StackStatus" --output=text --stack-name PROD', returnStatus: true
                              echo StackStatus
-                             return (StackStatus == 'CREATE_COMPLETE'); 
+                             return (StackStatus == 'CREATE_COMPLETE');
                            }
                        }
-                    } 
-                }                
+                    }
+                }
 //                waitUntil {    // some block }
 //                sh './aws_create.sh'
             }
-        }      
+        }
         stage ('Launching Ansible with dynamic inventory') {
             steps {
                 echo 'Appying CM'
@@ -67,27 +51,27 @@ pipeline {
                 }
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
                     ansiblePlaybook (
-                        colorized: true, 
-                        credentialsId: 'aws-test-oregon', 
-                        disableHostKeyChecking: true, 
-                        installation: 'Ansible', 
-                        inventory: './backend', 
+                        colorized: true,
+                        credentialsId: 'aws-test-oregon',
+                        disableHostKeyChecking: true,
+                        installation: 'Ansible',
+                        inventory: './backend',
                         playbook: './mysql.yaml'
                     )
                 }
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
                     ansiblePlaybook (
-                        colorized: true, 
-                        credentialsId: 'aws-test-oregon', 
-                        disableHostKeyChecking: true, 
-                        installation: 'Ansible', 
-                        inventory: './inventory/ec2.py', 
-                        limit: 'tag_VM_Tomcat:tag_VM_Zabbix', 
+                        colorized: true,
+                        credentialsId: 'aws-test-oregon',
+                        disableHostKeyChecking: true,
+                        installation: 'Ansible',
+                        inventory: './inventory/ec2.py',
+                        limit: 'tag_VM_Tomcat:tag_VM_Zabbix',
                         playbook: './site.yaml'
                     )
                 }
             }
-        }      
+        }
     }
 }
 

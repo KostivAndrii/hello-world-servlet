@@ -58,7 +58,8 @@ pipeline {
 //                            credentialsId: 'aws-test-oregon',
                             disableHostKeyChecking: true,
                             installation: 'Ansible',
-                            inventory: './backend',
+                            inventory: './hosts',
+                            limit: 'backend'
                             playbook: './mysql.yaml'
                         )
                     }

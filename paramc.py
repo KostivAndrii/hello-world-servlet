@@ -208,6 +208,9 @@ def main():
 
     print(output_text)
 
+    with open(rendered_file_path, "w") as result_file:
+        result_file.write(output_text)
+
     # try:
     #     tun_sh=open('tunnel.sh', 'a')
     # except FileNotFoundError:

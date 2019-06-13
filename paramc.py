@@ -5,6 +5,7 @@ import json
 import yaml
 import argparse
 import boto3
+import jinja2
 from botocore.client import ClientError
 
 allowed_action = ['CREATE', 'UPDATE', 'VERIFY', 'BOTO']
@@ -191,14 +192,40 @@ def main():
         # print('stdout = ', run(ssh_tunnel1))
     # print('run ssh_tunell', run(ssh_tunnel))
 
-    try:
-        tun_sh=open('tunnel.sh', 'a')
-    except FileNotFoundError:
-        print("can''t open destiantion file %s " % tun_sh)
-        sys.exit(2)
-    tun_sh.write("%s\r\n" % ssh_tunnel)
-    tun_sh.flush()
-    tun_sh.close()
+    template_filename = "config.j2"
+    rendered_filename = "config"
+    render_vars = {
+        "PublicIP": PublicIpAddress,
+        "PrivatIP": PrivateIpAddress
+    }
+
+    script_path = os.path.dirname(os.path.abspath(__file__))
+    template_file_path = os.path.join(script_path, template_filename)
+    rendered_file_path = os.path.join(script_path, rendered_filename)
+
+    environment = jinja2.Environment(loader=jinja2.FileSystemLoader(script_path))
+    output_text = environment.get_template(template_filename).render(render_vars)
+
+    print(output_text)
+
+    # try:
+    #     tun_sh=open('tunnel.sh', 'a')
+    # except FileNotFoundError:
+    #     print("can''t open destiantion file %s " % tun_sh)
+    #     sys.exit(2)
+    # tun_sh.write("%s\r\n" % ssh_tunnel)
+    # tun_sh.flush()
+    # tun_sh.close()
+
+
+    # try:
+    #     tun_sh=open('tunnel.sh', 'a')
+    # except FileNotFoundError:
+    #     print("can''t open destiantion file %s " % tun_sh)
+    #     sys.exit(2)
+    # tun_sh.write("%s\r\n" % ssh_tunnel)
+    # tun_sh.flush()
+    # tun_sh.close()
 
     # print('ssh_tunnel = ', ssh_tunnel)
     # print('ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@localhost')
@@ -234,6 +261,7 @@ def main():
 
 # ansible -i hosts backend -m ping
 # ssh -F config 10.200.11.208
+
 # ./config
 # ### jump server ###
 # Host bastion
@@ -259,6 +287,11 @@ def main():
 # [all:vars]
 # ansible_ssh_user=ec2-user
 # ansible_ssh_common_args='-F config'
+
+# Jenkinsfile-create
+# Jenkinsfile-deploy
+# Jenkinsfile-destroy
+
 
 if __name__ == "__main__":
     # execute only if run as a script

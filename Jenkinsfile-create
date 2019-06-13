@@ -59,7 +59,7 @@ pipeline {
                             disableHostKeyChecking: true,
                             installation: 'Ansible',
                             inventory: './hosts',
-                            limit: 'backend'
+                            limit: 'backend',
                             playbook: './mysql.yaml'
                         )
                     }

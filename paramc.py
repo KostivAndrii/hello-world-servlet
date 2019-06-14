@@ -6,7 +6,10 @@ import yaml
 import argparse
 import boto3
 import jinja2
+import http.client
+
 from botocore.client import ClientError
+
 
 allowed_action = ['CREATE', 'UPDATE', 'VERIFY', 'BOTO']
 
@@ -191,6 +194,20 @@ def main():
     # print('stdout = ', run(ssh_tunnel))
         # print('stdout = ', run(ssh_tunnel1))
     # print('run ssh_tunell', run(ssh_tunnel))
+
+    custom_filter = [{'Name':'tag:VM', 'Values': ['Tomcat']},{'Name': 'instance-state-name', 'Values': ['running']}]
+    response_е = ec2_client.describe_instances(Filters=custom_filter)
+    TomcatIpAddress = response_е['Reservations'][0]['Instances'][0]['PublicIpAddress']
+
+    conn       = http.client.HTTPConnection(TomcatIpAddress, 8080)
+    conn.request("GET", "/")
+    response = conn.getresponse()
+    print(response.status)
+    conn.close()
+    print(response.status, response.reason)
+    data = response.read()
+    print(data)
+    # https://www.journaldev.com/19213/python-http-client-request-get-post
 
     template_filename = "config.j2"
     rendered_filename = "config"

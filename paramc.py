@@ -195,20 +195,22 @@ def main():
         # print('stdout = ', run(ssh_tunnel1))
     # print('run ssh_tunell', run(ssh_tunnel))
 
+    # http.client
     custom_filter = [{'Name':'tag:VM', 'Values': ['Tomcat']},{'Name': 'instance-state-name', 'Values': ['running']}]
     response_е = ec2_client.describe_instances(Filters=custom_filter)
     TomcatIpAddress = response_е['Reservations'][0]['Instances'][0]['PublicIpAddress']
 
-    conn       = http.client.HTTPConnection(TomcatIpAddress, 8080)
+    conn = http.client.HTTPConnection(TomcatIpAddress, 8080)
     conn.request("GET", "/")
     response = conn.getresponse()
     print(response.status)
     conn.close()
-    print(response.status, response.reason)
-    data = response.read()
-    print(data)
+    # print(response.status, response.reason)
+    # data = response.read()
+    # print(data)
     # https://www.journaldev.com/19213/python-http-client-request-get-post
 
+    # jinja2 https://keyboardinterrupt.org/rendering-html-with-jinja2-in-python-3-6/?doing_wp_cron=1560335950.6937348842620849609375
     template_filename = "config.j2"
     rendered_filename = "config"
     render_vars = {
@@ -217,7 +219,7 @@ def main():
     }
 
     script_path = os.path.dirname(os.path.abspath(__file__))
-    template_file_path = os.path.join(script_path, template_filename)
+    # template_file_path = os.path.join(script_path, template_filename)
     rendered_file_path = os.path.join(script_path, rendered_filename)
 
     environment = jinja2.Environment(loader=jinja2.FileSystemLoader(script_path))
@@ -227,16 +229,6 @@ def main():
 
     with open(rendered_file_path, "w") as result_file:
         result_file.write(output_text)
-
-    # try:
-    #     tun_sh=open('tunnel.sh', 'a')
-    # except FileNotFoundError:
-    #     print("can''t open destiantion file %s " % tun_sh)
-    #     sys.exit(2)
-    # tun_sh.write("%s\r\n" % ssh_tunnel)
-    # tun_sh.flush()
-    # tun_sh.close()
-
 
     # try:
     #     tun_sh=open('tunnel.sh', 'a')

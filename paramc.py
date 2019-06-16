@@ -5,9 +5,13 @@ import json
 import yaml
 import argparse
 import boto3
+import jinja2
+import http.client
+
 from botocore.client import ClientError
 
-allowed_action = ['CREATE', 'UPDATE', 'TEST', 'BOTO']
+
+allowed_action = ['CREATE', 'UPDATE', 'VERIFY', 'BOTO']
 
 def read_cfg(inputfile):
     try:
@@ -55,7 +59,7 @@ class s3_bucket:
             self.__s3.meta.client.head_bucket(Bucket=backet_name)
         except ClientError:
             self.__create_bucket(self.backet_name)
-        return 
+        return
 
     def __create_bucket(self, bucket_name):
         # del s3_connection
@@ -111,6 +115,7 @@ def main():
 
     parameters = cfg["parameters"]
     tags = cfg["tags"]
+    tags['STACK'] = args.stack
     print('parameters = ', parameters)
     print('tags = ', tags)
 
@@ -131,13 +136,13 @@ def main():
     if args.action == "CREATE":
         cmd = "aws cloudformation create-stack --stack-name " + args.stack + \
               " --template-body file://ec2.yaml --parameters file://parameters.json --tags file://tags.json"
-        # stdout = 
+        # stdout =
         print('Creating STACK = ', run(cmd))
     if args.action == "UPDATE":
         cmd = "aws cloudformation update-stack --stack-name " + args.stack + \
               " --template-body file://ec2.yaml --parameters file://parameters.json --tags file://tags.json"
-        stdout = run(cmd)
-        print('stdout = ', stdout)
+        # stdout = run(cmd)
+        print('stdout = ', run(cmd))
     if args.action == "BOTO":
         if stack_exists(cf_client, args.stack):
             print('Updating {}'.format(args.stack))
@@ -149,14 +154,16 @@ def main():
             waiter = cf_client.get_waiter('stack_create_complete')
         waiter.wait(StackName=args.stack)
         print('ec2.yaml create = ', response)
+    if args.action == "VERIFY":
+        pass
 
     ec2 = boto3.resource('ec2')
     ec2_client = ec2.meta.client
     # ec2_client = boto3.client('ec2')
 
-    # waiting for finishing instances initialization
+    # waiting for finishing instances initialization tags['STACK'] = args.stack
     instances = ec2.instances.filter(
-        Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
+        Filters=[{'Name':'tag:STACK', 'Values': [args.stack]},{'Name': 'instance-state-name', 'Values': ['running']}])
 
     for instance in instances:
         inst_status = ec2_client.describe_instance_status(InstanceIds = [instance.id])
@@ -185,16 +192,87 @@ def main():
         PrivateIpAddress + ':22 ec2-user@' + PublicIpAddress
     # ssh_tunnel1 = 'ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@' + PublicIpAddress
     print(ssh_tunnel)
-    # print(ssh_tunnel1)
 
-    try:
-        tun_sh=open('tunnel.sh', 'a')
-    except FileNotFoundError:
-        print("can''t open destiantion file %s " % outputfile)
-        sys.exit(2)
-    tun_sh.write("%s\r\n" % ssh_tunnel)
-    tun_sh.flush()
-    tun_sh.close()
+    # # http.client
+    # custom_filter = [{'Name':'tag:VM', 'Values': ['Tomcat']},{'Name': 'instance-state-name', 'Values': ['running']}]
+    # response_е = ec2_client.describe_instances(Filters=custom_filter)
+    # TomcatIpAddress = response_е['Reservations'][0]['Instances'][0]['PublicIpAddress']
+
+    # conn = http.client.HTTPConnection(TomcatIpAddress, 8080)
+    # conn.request("GET", "/")
+    # response = conn.getresponse()
+    # print(response.status)
+    # conn.close()
+    # # print(response.status, response.reason)
+    # # data = response.read()
+    # # print(data)
+    # # https://www.journaldev.com/19213/python-http-client-request-get-post
+
+    # jinja2 https://keyboardinterrupt.org/rendering-html-with-jinja2-in-python-3-6/?doing_wp_cron=1560335950.6937348842620849609375
+    template_filename = "config.j2"
+    rendered_filename = "config"
+    render_vars = {
+        "PublicIP": PublicIpAddress,
+        "PrivatIP": PrivateIpAddress
+    }
+
+    script_path = os.path.dirname(os.path.abspath(__file__))
+    # template_file_path = os.path.join(script_path, template_filename)
+    rendered_file_path = os.path.join(script_path, rendered_filename)
+
+    environment = jinja2.Environment(loader=jinja2.FileSystemLoader(script_path))
+    output_text = environment.get_template(template_filename).render(render_vars)
+
+    print(output_text)
+
+    with open(rendered_file_path, "w") as result_file:
+        result_file.write(output_text)
+
+    # try:
+    #     tun_sh=open('tunnel.sh', 'a')
+    # except FileNotFoundError:
+    #     print("can''t open destiantion file %s " % tun_sh)
+    #     sys.exit(2)
+    # tun_sh.write("%s\r\n" % ssh_tunnel)
+    # tun_sh.flush()
+    # tun_sh.close()
+
+    # print('ssh_tunnel = ', ssh_tunnel)
+    # print('ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@localhost')
+    # print('stdout = ', run(ssh_tunnel))
+
+# ./config
+# ### jump server ###
+# Host bastion
+#     HostName 35.180.159.10
+#     Port 22
+#     User ec2-user
+#     StrictHostKeyChecking no
+#     ForwardAgent yes
+
+# Host db
+#     HostName 10.200.11.103
+#     ProxyJump bastion
+#     Port 22
+#     User ec2-user
+#     StrictHostKeyChecking no
+#     ForwardAgent yes
+
+# # inventory
+# [gate]
+# bastion
+# [backend]
+# db
+# [all:vars]
+# ansible_ssh_user=ec2-user
+# ansible_ssh_common_args='-F config'
+
+# ansible -i hosts db -m ping
+# ssh -F config db
+
+# Jenkinsfile-create
+# Jenkinsfile-deploy
+# Jenkinsfile-destroy
 
 
 if __name__ == "__main__":

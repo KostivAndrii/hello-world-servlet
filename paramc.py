@@ -10,8 +10,14 @@ import http.client
 
 from botocore.client import ClientError
 
-
 allowed_action = ['CREATE', 'UPDATE', 'VERIFY', 'BOTO']
+valid_stack_states = '''\
+CREATE_COMPLETE
+UPDATE_COMPLETE'''.splitlines()
+
+# CREATE_IN_PROGRESS
+# UPDATE_IN_PROGRESS
+# UPDATE_COMPLETE_CLEANUP_IN_PROGRESS
 
 def read_cfg(inputfile):
     try:
@@ -28,7 +34,7 @@ def write_json(outputfile, data, KeyName, ValueName):
     try:
         output=open(outputfile, 'w')
     except FileNotFoundError:
-        print("can''t open destiantion file %s " % outputfile)
+        print("can't open destiantion file %s " % outputfile)
         sys.exit(2)
     OutputParam = [ {KeyName: paramm, ValueName: data[paramm]} for paramm in data ]
     json.dump(OutputParam, output)
@@ -40,8 +46,53 @@ def write_json(outputfile, data, KeyName, ValueName):
 def run(cmd):
     return os.popen(cmd).read()
 
-def stack_exists(cf_client, stack_name):
-    stacks = cf_client.list_stacks()['StackSummaries']
+def check_run_and_ready(ec2, STACK_name, ec2_amount):
+    # ec2_client = ec2.meta.client
+    instances = ec2.instances.filter(
+        Filters=[{'Name':'tag:STACK', 'Values': [STACK_name]},{'Name': 'instance-state-name', 'Values': ['running']}])
+
+    ec2_run_amount = 0
+    for instance in instances:
+        inst_status = ec2.meta.client.describe_instance_status(InstanceIds = [instance.id])
+        ec2_run_amount += 1
+        print("Id1: %s Id2: %s InstanceStatus: %s SystemStatus %s " % (instance.id, \
+            inst_status['InstanceStatuses'][0]['InstanceId'], \
+            inst_status['InstanceStatuses'][0]['InstanceStatus']['Status'],\
+            inst_status['InstanceStatuses'][0]['SystemStatus']['Status']))
+        if inst_status['InstanceStatuses'][0]['SystemStatus']['Status'] == 'initializing':
+            waiter = ec2.meta.client.get_waiter('system_status_ok')
+            waiter.wait(InstanceIds=[instance.id])
+        if inst_status['InstanceStatuses'][0]['InstanceStatus']['Status'] == 'initializing':
+            waiter = ec2.meta.client.get_waiter('instance_status_ok')
+            waiter.wait(InstanceIds=[instance.id])
+    return True if ec2_run_amount == ec2_amount else False
+
+def get_ec2_IP(ec2, STACK_name, VM, IpAddress, state):
+    custom_filter = [{'Name':'tag:STACK', 'Values': [STACK_name]}, \
+                     {'Name':'tag:VM', 'Values': [VM]}, \
+                     {'Name': 'instance-state-name', 'Values': [state]}]
+    response = ec2.meta.client.describe_instances(Filters=custom_filter)
+    return response['Reservations'][0]['Instances'][0][IpAddress]
+
+def check_opened_port(IpAddress, port):
+    conn = http.client.HTTPConnection(IpAddress, 8080)
+    try:
+        conn.request("GET", "/")
+    except ConnectionRefusedError:
+        exit('No connection could be made because the target machine actively refused it') 
+    response = conn.getresponse()
+    # headers = response.getheaders()
+    print(response.status)
+    return True if response.status == 200 else False
+    # # https://www.journaldev.com/19213/python-http-client-request-get-post
+
+def stack_exists(cf_client, stack_name, STACK_STATUS):
+    if STACK_STATUS == '' :
+        stacks = cf_client.list_stacks()['StackSummaries']
+    else:
+        stacks = cf_client.list_stacks(StackStatusFilter=STACK_STATUS)['StackSummaries']
+    # https://www.oipapio.com/question-811760
+    # https://docs.aws.amazon.com/en_us/AWSCloudFormation/latest/UserGuide/using-cfn-describing-stacks.html
     for stack in stacks:
         if stack['StackStatus'] == 'DELETE_COMPLETE':
             continue
@@ -68,7 +119,7 @@ class s3_bucket:
         current_region = session.region_name
         # bucket_name = create_bucket_name(bucket_prefix)
         s3_client.create_bucket(
-            Bucket=bucket_name,
+            Bucket=bucket_name, 
             CreateBucketConfiguration={
             'LocationConstraint': current_region})
         print('create_bucket: ',bucket_name, current_region)
@@ -90,7 +141,6 @@ class s3_bucket:
         obj = self.__s3.Object(self.backet_name, obj_key)
         return obj.delete()
 
-
 def main():
     parser = argparse.ArgumentParser(description='Programm to work with AWS')
     parser.add_argument("-s","--stack", help="STACK name", type=str)
@@ -110,18 +160,23 @@ def main():
     print("script will convert %s into parameters.json and tags.json for ENVIRONMENT ... and %s STACK %s" \
         % (args.input, args.action, args.stack) )
 
+    # reading params,tsgs from input file
     cfg = read_cfg(args.input)
     print('cfg = ', cfg)
 
+    # selecting parameters and tags 
     parameters = cfg["parameters"]
     tags = cfg["tags"]
+    # add to tags STACK name to separate this stack
     tags['STACK'] = args.stack
     print('parameters = ', parameters)
     print('tags = ', tags)
 
+    # converting input  parameters and tags to json
     jParameters = write_json("parameters.json",parameters,"ParameterKey", "ParameterValue")
     jTags = write_json("tags.json",tags,"Key", "Value")
 
+    # uploading template into S# bucket for deploying and validating cf-template
     s3 = s3_bucket(args.s3)
     print(dir(s3))
     s3.del_obj(args.cloud_formation_key)
@@ -129,22 +184,29 @@ def main():
     object_url = s3.get_obj_url(args.s3, args.cloud_formation_key)
 
     cf_client = boto3.client('cloudformation')
-    # validate templatee
+    # validate template via boto3 by passing s3 bucket obj_url 
     print('ec2.yaml validate = ', cf_client.validate_template(TemplateURL=object_url))
+    # validate template via awscli 
     print('stdout = ', run("aws cloudformation validate-template --template-body file://ec2.yaml"))
 
+    # verify if ec2 instances are runing  and wait till thay finish initializing
+    ec2 = boto3.resource('ec2')
+    # ec2_client = ec2.meta.client
+    # ec2_client = boto3.client('ec2')
+
+    # if action CREATE - create stack by awscli
     if args.action == "CREATE":
         cmd = "aws cloudformation create-stack --stack-name " + args.stack + \
               " --template-body file://ec2.yaml --parameters file://parameters.json --tags file://tags.json"
-        # stdout =
         print('Creating STACK = ', run(cmd))
+    # if action UPDATE - create stack by awscli
     if args.action == "UPDATE":
         cmd = "aws cloudformation update-stack --stack-name " + args.stack + \
               " --template-body file://ec2.yaml --parameters file://parameters.json --tags file://tags.json"
-        # stdout = run(cmd)
         print('stdout = ', run(cmd))
+    # if action BOTO - create or update stack by boto
     if args.action == "BOTO":
-        if stack_exists(cf_client, args.stack):
+        if stack_exists(cf_client, args.stack, ''):
             print('Updating {}'.format(args.stack))
             response = cf_client.update_stack(StackName=args.stack, TemplateURL=object_url, Parameters=jParameters, Tags=jTags)
             waiter = cf_client.get_waiter('stack_update_complete')
@@ -154,66 +216,41 @@ def main():
             waiter = cf_client.get_waiter('stack_create_complete')
         waiter.wait(StackName=args.stack)
         print('ec2.yaml create = ', response)
+    # if action VERIFY - verify stack by boto
     if args.action == "VERIFY":
+        result_stack = stack_exists(cf_client, args.stack, ['CREATE_COMPLETE','UPDATE_COMPLETE'])
+        if not result_stack : 
+            exit('stack not ready') 
+        result_ec2 = check_run_and_ready(ec2, args.stack, 4)
+        if not result_ec2 : 
+            exit('instances not ready') 
+        TomcatIpAddress = get_ec2_IP(ec2, args.stack, 'Tomcat', 'PublicIpAddress', 'running')
+        result_app_port = check_opened_port(TomcatIpAddress, 8080)              
+        if not result_app_port : 
+            exit('application not ready') 
         pass
 
-    ec2 = boto3.resource('ec2')
-    ec2_client = ec2.meta.client
-    # ec2_client = boto3.client('ec2')
+    # check finish initializing 4 pcs EC2 instances 
+    check_run_and_ready(ec2, args.stack, 4)
+    result_s = stack_exists(cf_client, args.stack, ['CREATE_COMPLETE','UPDATE_COMPLETE'])
 
-    # waiting for finishing instances initialization tags['STACK'] = args.stack
-    instances = ec2.instances.filter(
-        Filters=[{'Name':'tag:STACK', 'Values': [args.stack]},{'Name': 'instance-state-name', 'Values': ['running']}])
+    # gathering info (public and privet IP) to prepare connection to BackEnd
+    PublicIpAddress = get_ec2_IP(ec2, args.stack, 'NATGW', 'PublicIpAddress', 'running')
+    BackEndIpAddress = get_ec2_IP(ec2, args.stack, 'BackEnd', 'PrivateIpAddress', 'running')
 
-    for instance in instances:
-        inst_status = ec2_client.describe_instance_status(InstanceIds = [instance.id])
-        print("Id1: %s Id2: %s InstanceStatus: %s SystemStatus %s " % (instance.id, \
-            inst_status['InstanceStatuses'][0]['InstanceId'], \
-            inst_status['InstanceStatuses'][0]['InstanceStatus']['Status'],\
-            inst_status['InstanceStatuses'][0]['SystemStatus']['Status']))
-        if inst_status['InstanceStatuses'][0]['SystemStatus']['Status'] == 'initializing':
-            waiter = ec2_client.get_waiter('system_status_ok')
-            waiter.wait(InstanceIds=[instance.id])
-        if inst_status['InstanceStatuses'][0]['InstanceStatus']['Status'] == 'initializing':
-            waiter = ec2_client.get_waiter('instance_status_ok')
-            waiter.wait(InstanceIds=[instance.id])
+    # # ssh port forwarding to BAckEnd
+    # ssh_tunnel = 'ssh -o "StrictHostKeyChecking no" -f -N -L 12345:' + \
+    #     BackEndIpAddress + ':22 ec2-user@' + PublicIpAddress
+    # # ssh_tunnel1 = 'ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@' + PublicIpAddress
+    # print(ssh_tunnel)
 
-    # preparion scripts for tunelling
-    # inst_info = ec2_client.describe_instances(InstanceIds = [instance.id])
-    custom_filter = [{'Name':'tag:VM', 'Values': ['NATGW']},{'Name': 'instance-state-name', 'Values': ['running']}]
-    response_n = ec2_client.describe_instances(Filters=custom_filter)
-    PublicIpAddress = response_n['Reservations'][0]['Instances'][0]['PublicIpAddress']
-
-    custom_filter = [{'Name':'tag:VM', 'Values': ['BackEnd']},{'Name': 'instance-state-name', 'Values': ['running']}]
-    response_b = ec2_client.describe_instances(Filters=custom_filter)
-    PrivateIpAddress = response_b['Reservations'][0]['Instances'][0]['PrivateIpAddress']
-
-    ssh_tunnel = 'ssh -o "StrictHostKeyChecking no" -f -N -L 12345:' + \
-        PrivateIpAddress + ':22 ec2-user@' + PublicIpAddress
-    # ssh_tunnel1 = 'ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@' + PublicIpAddress
-    print(ssh_tunnel)
-
-    # # http.client
-    # custom_filter = [{'Name':'tag:VM', 'Values': ['Tomcat']},{'Name': 'instance-state-name', 'Values': ['running']}]
-    # response_е = ec2_client.describe_instances(Filters=custom_filter)
-    # TomcatIpAddress = response_е['Reservations'][0]['Instances'][0]['PublicIpAddress']
-
-    # conn = http.client.HTTPConnection(TomcatIpAddress, 8080)
-    # conn.request("GET", "/")
-    # response = conn.getresponse()
-    # print(response.status)
-    # conn.close()
-    # # print(response.status, response.reason)
-    # # data = response.read()
-    # # print(data)
-    # # https://www.journaldev.com/19213/python-http-client-request-get-post
-
+    # ssh ProxyJump via NAT gateway 
     # jinja2 https://keyboardinterrupt.org/rendering-html-with-jinja2-in-python-3-6/?doing_wp_cron=1560335950.6937348842620849609375
     template_filename = "config.j2"
     rendered_filename = "config"
     render_vars = {
         "PublicIP": PublicIpAddress,
-        "PrivatIP": PrivateIpAddress
+        "PrivatIP": BackEndIpAddress
     }
 
     script_path = os.path.dirname(os.path.abspath(__file__))
@@ -222,24 +259,11 @@ def main():
 
     environment = jinja2.Environment(loader=jinja2.FileSystemLoader(script_path))
     output_text = environment.get_template(template_filename).render(render_vars)
-
     print(output_text)
-
     with open(rendered_file_path, "w") as result_file:
         result_file.write(output_text)
 
-    # try:
-    #     tun_sh=open('tunnel.sh', 'a')
-    # except FileNotFoundError:
-    #     print("can''t open destiantion file %s " % tun_sh)
-    #     sys.exit(2)
-    # tun_sh.write("%s\r\n" % ssh_tunnel)
-    # tun_sh.flush()
-    # tun_sh.close()
-
-    # print('ssh_tunnel = ', ssh_tunnel)
-    # print('ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@localhost')
-    # print('stdout = ', run(ssh_tunnel))
+    # all done lets run next step
 
 # ./config
 # ### jump server ###

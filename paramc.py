@@ -228,7 +228,7 @@ def main():
         result_app_port = check_opened_port(TomcatIpAddress, 8080)              
         if not result_app_port : 
             exit('application not ready') 
-        pass
+        exit(TomcatIpAddress)
 
     # check finish initializing 4 pcs EC2 instances 
     check_run_and_ready(ec2, args.stack, 4)

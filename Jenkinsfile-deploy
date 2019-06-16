@@ -41,6 +41,9 @@ pipeline {
                 echo "EC2_IP: ${EC2_IP}"
                 echo "env.EC2_IP: ${env.EC2_IP}"
 //                sh "printenv | sort"
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
+                    sh 'python3 -u ./paramc.py -s=AWS-NATGW -a=VERIFY -i=my_cfg.yaml -cf=ec2.yaml -cfk=ec2.yaml -s3=cf-yaml-s3-bucket'
+                }
                 sh 'pwd'
                 sh 'ls -la'
                 sh './get_artifact.sh ${release}'

@@ -46,7 +46,7 @@ def stack_exists(cf_client, stack_name):
     return False
 
 class s3_bucket:
-    "class for workong with s3 bucket" 
+    "class for working with s3 bucket" 
     def __init__(self, backet_name):
         # del first_bucket_name first_
         self.__s3 = boto3.resource('s3')
@@ -118,6 +118,7 @@ def main():
     jTags = write_json("tags.json",tags,"Key", "Value")
 
     s3 = s3_bucket(args.s3)
+    print(dir(s3))
     s3.del_obj(args.cloud_formation_key)
     s3.upload_obj(args.s3, args.cloud_formation, args.cloud_formation_key)
     object_url = s3.get_obj_url(args.s3, args.cloud_formation_key)
@@ -182,12 +183,10 @@ def main():
 
     ssh_tunnel = 'ssh -o "StrictHostKeyChecking no" -f -N -L 12345:' + \
         PrivateIpAddress + ':22 ec2-user@' + PublicIpAddress
-    # ssh_tunnel1 = 'ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@' + PublicIpAddress + ' '
+    # ssh_tunnel1 = 'ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@' + PublicIpAddress
     print(ssh_tunnel)
-    # print('stdout = ', run(ssh_tunnel))
-        # print('stdout = ', run(ssh_tunnel1))
-    # print('run ssh_tunell', run(ssh_tunnel))
-    
+    # print(ssh_tunnel1)
+
     try:
         tun_sh=open('tunnel.sh', 'a')
     except FileNotFoundError:
@@ -196,10 +195,6 @@ def main():
     tun_sh.write("%s\r\n" % ssh_tunnel)
     tun_sh.flush()
     tun_sh.close()
-
-    # print('ssh_tunnel = ', ssh_tunnel)
-    # print('ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@localhost')
-    # print('stdout = ', run(ssh_tunnel))
 
 
 if __name__ == "__main__":

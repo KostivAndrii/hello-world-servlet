@@ -142,6 +142,7 @@ class s3_bucket:
         return obj.delete()
 
 def main():
+    # # procassing input parameters
     parser = argparse.ArgumentParser(description='Programm to work with AWS')
     parser.add_argument("-s","--stack", help="STACK name", type=str)
     parser.add_argument('-a','--action', help='what to do CREATE/UPDATE/BOTO')
@@ -151,8 +152,7 @@ def main():
     parser.add_argument('-s3','--s3', help='file with parameters and tags')
     args = parser.parse_args()
 
-    sys.stdout.flush()
-
+    # sys.stdout.flush()
     if args.action not in allowed_action:
         print('wrong action - we process only', allowed_action)
         sys.exit()
@@ -160,6 +160,7 @@ def main():
     print("script will convert %s into parameters.json and tags.json for ENVIRONMENT ... and %s STACK %s" \
         % (args.input, args.action, args.stack) )
 
+    # # preparing input parameters
     # reading params,tsgs from input file
     cfg = read_cfg(args.input)
     print('cfg = ', cfg)
@@ -171,11 +172,11 @@ def main():
     tags['STACK'] = args.stack
     print('parameters = ', parameters)
     print('tags = ', tags)
-
     # converting input  parameters and tags to json
     jParameters = write_json("parameters.json",parameters,"ParameterKey", "ParameterValue")
     jTags = write_json("tags.json",tags,"Key", "Value")
 
+    # # validating template
     # uploading template into S# bucket for deploying and validating cf-template
     s3 = s3_bucket(args.s3)
     print(dir(s3))
@@ -189,7 +190,7 @@ def main():
     # validate template via awscli 
     print('stdout = ', run("aws cloudformation validate-template --template-body file://ec2.yaml"))
 
-    # verify if ec2 instances are runing  and wait till thay finish initializing
+    # # Lets do it
     ec2 = boto3.resource('ec2')
     # ec2_client = ec2.meta.client
     # ec2_client = boto3.client('ec2')
@@ -231,21 +232,15 @@ def main():
         print(TomcatIpAddress)
         exit()
 
+    ## Checkins created/updated STACK and EC2 instances status and prepare SSH to CM BackEnd
     # check finish initializing 4 pcs EC2 instances 
     check_run_and_ready(ec2, args.stack, 4)
-    result_s = stack_exists(cf_client, args.stack, ['CREATE_COMPLETE','UPDATE_COMPLETE'])
 
     # gathering info (public and privet IP) to prepare connection to BackEnd
     PublicIpAddress = get_ec2_IP(ec2, args.stack, 'NATGW', 'PublicIpAddress', 'running')
     BackEndIpAddress = get_ec2_IP(ec2, args.stack, 'BackEnd', 'PrivateIpAddress', 'running')
 
-    # # ssh port forwarding to BAckEnd
-    # ssh_tunnel = 'ssh -o "StrictHostKeyChecking no" -f -N -L 12345:' + \
-    #     BackEndIpAddress + ':22 ec2-user@' + PublicIpAddress
-    # # ssh_tunnel1 = 'ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@' + PublicIpAddress
-    # print(ssh_tunnel)
-
-    # ssh ProxyJump via NAT gateway 
+    # # ssh ProxyJump via NAT gateway to BackEnd
     # jinja2 https://keyboardinterrupt.org/rendering-html-with-jinja2-in-python-3-6/?doing_wp_cron=1560335950.6937348842620849609375
     template_filename = "config.j2"
     rendered_filename = "config"
@@ -265,6 +260,10 @@ def main():
         result_file.write(output_text)
 
     # all done lets run next step
+
+if __name__ == "__main__":
+    # execute only if run as a script
+    main()
 
 # ./config
 # ### jump server ###
@@ -295,11 +294,13 @@ def main():
 # ansible -i hosts db -m ping
 # ssh -F config db
 
+# 1. first way to connectg via SSH to BackEnd
+# ssh_tunnel = 'ssh -o "StrictHostKeyChecking no" -f -N -L 12345:' + \
+#     BackEndIpAddress + ':22 ec2-user@' + PublicIpAddress
+# # ssh_tunnel1 = 'ssh -i id_rsa -o "StrictHostKeyChecking no" -p12345 ec2-user@' + PublicIpAddress
+# print(ssh_tunnel)
+
+
 # Jenkinsfile-create
 # Jenkinsfile-deploy
 # Jenkinsfile-destroy
-
-
-if __name__ == "__main__":
-    # execute only if run as a script
-    main()

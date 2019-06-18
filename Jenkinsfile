@@ -6,7 +6,7 @@ pipeline {
     stages {
         stage ('Clone') {
             steps {
-                git branch: 'master', url: "https://github.com/KostivAndrii/hello-world-servlet.git"
+                git branch: 'develop', url: "https://github.com/KostivAndrii/hello-world-servlet.git"
             }
         }
         stage ('Artifactory configuration') {

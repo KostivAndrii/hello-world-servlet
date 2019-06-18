@@ -5,7 +5,7 @@ pipeline {
             steps {
                 echo 'Destroying  environment in AWS and CM Tomcat there'
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
-                  sh 'aws cloudformation delete-stack --stack-name PROD'
+                  sh 'aws cloudformation delete-stack --stack-name AWS-NATGW'
                 }
             }
         }      

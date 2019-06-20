@@ -6,6 +6,7 @@ provider "aws" {
   region = "${var.aws_region}"
 }
 
+
 resource "aws_vpc" "main" {
   cidr_block = "${var.VPCBlock}"
 
@@ -15,6 +16,24 @@ resource "aws_vpc" "main" {
     # Environment = "${terraform.workspace}"
   }
 }
+
+# Internet Gateway
+resource "aws_internet_gateway" "igw" {
+  vpc_id = "${aws_vpc.main.id}"
+}
+
+# EIP and NAT Gateway
+resource "aws_eip" "nat_eip" {
+  vpc      = true
+}
+
+resource "aws_nat_gateway" "natgw" {
+  allocation_id = "${aws_eip.nat_eip.id}"
+  subnet_id     = "${element(aws_subnet.public_subnet.*.id, 1)}"
+
+  depends_on = ["aws_internet_gateway.igw"]
+}
+
 resource "aws_subnet" "public_subnet" {
   vpc_id     = "${aws_vpc.main.id}"
   cidr_block = "${var.PublicSubnetCIDR}"

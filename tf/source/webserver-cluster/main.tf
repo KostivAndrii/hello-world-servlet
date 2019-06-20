@@ -3,39 +3,8 @@ terraform {
 }
 
 provider "aws" {
-  region = "${var.aws_region}"
+  region = "eu-west-3"
 }
-
-resource "aws_vpc" "main" {
-  cidr_block = "${var.VPCBlock}"
-
-  tags = {
-    Name     = "my-terraform-aws-vpc"
-    # Name = "my-terraform-aws-vpc-${terraform.workspace}"
-    # Environment = "${terraform.workspace}"
-  }
-}
-resource "aws_subnet" "public_subnet" {
-  vpc_id     = "${aws_vpc.main.id}"
-  cidr_block = "${var.PublicSubnetCIDR}"
-
-  tags {
-    Name = "public_subnet"
-    # Name = "public_subnet_${terraform.workspace}"
-  }
-}
-resource "aws_subnet" "privat_subnet" {
-  vpc_id     = "${aws_vpc.main.id}"
-  cidr_block = "${var.PrivatSubnetCIDR}"
-
-  tags {
-    Name = "privat_subnet"
-    # Name = "public_subnet_${terraform.workspace}"
-  }
-}
-
-
-
 
 resource "aws_launch_configuration" "example" {
   image_id        = "ami-0a8e17334212f7052"

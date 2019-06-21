@@ -46,8 +46,8 @@ resource "aws_subnet" "public_subnet" {
     }
 }
 #====== Public RouteTables ========= Routes for Public Subnet RouteTables with IGW =========
-resource "aws_route_table" "public_route" {
-    vpc_id = "${aws_vpc.main.id}"
+resource "aws_default_route_table" "public_route" {
+    default_route_table_id = "${aws_vpc.main.default_route_table_id}"
     tags = {
         Name = "${var.Environment}-PublicRouteTables"
         # Name = "PublicRouteTables_${terraform.workspace}"
@@ -60,7 +60,7 @@ resource "aws_route_table" "public_route" {
 }
 resource "aws_route_table_association" "public_route_assoc" {
     subnet_id = "${aws_subnet.public_subnet.id}"
-    route_table_id = "${aws_route_table.public_route.id}"
+    route_table_id = "${aws_default_route_table.public_route.id}"
 }
 #==================================================== Privat Subnet =========
 resource "aws_subnet" "privat_subnet" {
@@ -155,12 +155,12 @@ resource "aws_instance" "BackEndInstance" {
     }
 }
 #====== Public SecurityGroup
-resource "aws_security_group" "public_sg" {
-    name = "public_sg"
+resource "aws_default_security_group" "public_sg" {
+      # name = "public_sg"
     tags = {
         Name = "${var.Environment}-public_sg"
     }
-    description = "Connections for the nat instance"
+    # description = "Connections for the nat instance"
     vpc_id = "${aws_vpc.main.id}"
     ingress {
         from_port   = "80"
@@ -199,8 +199,7 @@ resource "aws_security_group" "public_sg" {
         cidr_blocks = ["0.0.0.0/0"]
     }
 }
-#====== Public Servers
-#====== Tomcat instance
+#====== Public Servers ====== Tomcat instance
 resource "aws_instance" "TomcatInstance" {
     ami = "${var.server_ami}"
     instance_type = "${var.server_type}"
@@ -208,7 +207,7 @@ resource "aws_instance" "TomcatInstance" {
     key_name = "${var.KeyName}"
 
     subnet_id = "${aws_subnet.public_subnet.id}"
-    vpc_security_group_ids = ["${aws_security_group.public_sg.id}"]
+    vpc_security_group_ids = ["${aws_default_security_group.public_sg.id}"]
     tags = {
         Name = "${var.Environment}-Tomcat"
         VM = "Tomcat"
@@ -222,9 +221,10 @@ resource "aws_instance" "ZabbixInstance" {
     key_name = "${var.KeyName}"
 
     subnet_id = "${aws_subnet.public_subnet.id}"
-    vpc_security_group_ids = ["${aws_security_group.public_sg.id}"]
+    vpc_security_group_ids = ["${aws_default_security_group.public_sg.id}"]
     tags = {
         Name = "${var.Environment}-Zabbix"
         VM = "Zabbix"
     }
 }
+# terraform apply -var-file=vpc.tfvars

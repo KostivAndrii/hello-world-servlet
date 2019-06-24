@@ -49,7 +49,8 @@ def run(cmd):
 def check_run_and_ready(ec2, STACK_name, ec2_amount):
     # ec2_client = ec2.meta.client
     instances = ec2.instances.filter(
-        Filters=[{'Name':'tag:STACK', 'Values': [STACK_name]},{'Name': 'instance-state-name', 'Values': ['running']}])
+        Filters=[{'Name':'tag:STACK', 'Values': [STACK_name]}, \
+                 {'Name': 'instance-state-name', 'Values': ['running']}])
 
     ec2_run_amount = 0
     for instance in instances:

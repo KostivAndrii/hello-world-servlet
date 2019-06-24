@@ -11,8 +11,6 @@ resource "aws_vpc" "main" {
 
     tags = {
         Name     = "${var.Environment}-vpc"
-        # Name = "my-terraform-aws-vpc-${terraform.workspace}"
-        # Environment = "${terraform.workspace}"
     }
 }
 # Internet Gateway
@@ -21,8 +19,6 @@ resource "aws_internet_gateway" "igw" {
 
     tags = {
         Name     = "${var.Environment}-IGW"
-        # Name = "my-terraform-aws-vpc-${terraform.workspace}"
-        # Environment = "${terraform.workspace}"
     }
 }
 # # EIP and NAT Gateway
@@ -42,15 +38,13 @@ resource "aws_subnet" "public_subnet" {
 
     tags = {
         Name = "${var.Environment}-public_subnet"
-        # Name = "public_subnet_${terraform.workspace}"
     }
 }
 #====== Public RouteTables ========= Routes for Public Subnet RouteTables with IGW =========
-resource "aws_default_route_table" "public_route" {
-    default_route_table_id = "${aws_vpc.main.default_route_table_id}"
+resource "aws_route_table" "public_route" {
+    vpc_id = "${aws_vpc.main.id}"
     tags = {
         Name = "${var.Environment}-PublicRouteTables"
-        # Name = "PublicRouteTables_${terraform.workspace}"
     }
 
     route {
@@ -60,7 +54,7 @@ resource "aws_default_route_table" "public_route" {
 }
 resource "aws_route_table_association" "public_route_assoc" {
     subnet_id = "${aws_subnet.public_subnet.id}"
-    route_table_id = "${aws_default_route_table.public_route.id}"
+    route_table_id = "${aws_route_table.public_route.id}"
 }
 #==================================================== Privat Subnet =========
 resource "aws_subnet" "privat_subnet" {
@@ -69,15 +63,13 @@ resource "aws_subnet" "privat_subnet" {
 
     tags = {
         Name = "${var.Environment}-privat_subnet"
-        # Name = "public_subnet_${terraform.workspace}"
     }
 }
 #====== Privat RouteTables ========= Routes for Privat Subnet RouteTables with NATGW =========
-resource "aws_route_table" "privat_route" {
-    vpc_id = "${aws_vpc.main.id}"
+resource "aws_default_route_table" "privat_route" {
+    default_route_table_id = "${aws_vpc.main.default_route_table_id}"
     tags = {
         Name = "${var.Environment}-PrivatRouteTables"
-        # Name = "PrivatRouteTables_${terraform.workspace}"
     }
 
     route {
@@ -89,15 +81,16 @@ resource "aws_route_table" "privat_route" {
 }
 resource "aws_route_table_association" "privat_route_assoc" {
     subnet_id = "${aws_subnet.privat_subnet.id}"
-    route_table_id = "${aws_route_table.privat_route.id}"
+    route_table_id = "${aws_default_route_table.privat_route.id}"
 }
 #====== NAT GW SecurityGroup
-resource "aws_security_group" "NATGW_sg" {
-    name = "natgw_sg"
+resource "aws_default_security_group" "NATGW_sg" {
+    # aws_default_security_group
+    # name = "natgw_sg"
     tags = {
         Name = "${var.Environment}-natgw_sg"
     }
-    description = "Connections for the nat instance"
+    # description = "Connections for the nat instance"
     vpc_id = "${aws_vpc.main.id}"
     ingress {
         from_port   = "0"
@@ -126,7 +119,7 @@ resource "aws_instance" "NATGWInstance" {
     key_name = "${var.KeyName}"
 
     subnet_id = "${aws_subnet.public_subnet.id}"
-    vpc_security_group_ids = ["${aws_security_group.NATGW_sg.id}"]
+    vpc_security_group_ids = ["${aws_default_security_group.NATGW_sg.id}"]
     source_dest_check = "false"
     user_data = <<-EOF
                 #!/bin/bash -xe
@@ -148,19 +141,19 @@ resource "aws_instance" "BackEndInstance" {
     key_name = "${var.KeyName}"
 
     subnet_id = "${aws_subnet.privat_subnet.id}"
-    vpc_security_group_ids = ["${aws_security_group.NATGW_sg.id}"]
+    vpc_security_group_ids = ["${aws_default_security_group.NATGW_sg.id}"]
     tags = {
         Name = "${var.Environment}-BackEnd"
         VM = "BackEnd"
     }
 }
 #====== Public SecurityGroup
-resource "aws_default_security_group" "public_sg" {
-      # name = "public_sg"
+resource "aws_security_group" "public_sg" {
+    name = "public_sg"
     tags = {
         Name = "${var.Environment}-public_sg"
     }
-    # description = "Connections for the nat instance"
+    description = "Connections for the nat instance"
     vpc_id = "${aws_vpc.main.id}"
     ingress {
         from_port   = "80"
@@ -207,7 +200,7 @@ resource "aws_instance" "TomcatInstance" {
     key_name = "${var.KeyName}"
 
     subnet_id = "${aws_subnet.public_subnet.id}"
-    vpc_security_group_ids = ["${aws_default_security_group.public_sg.id}"]
+    vpc_security_group_ids = ["${aws_security_group.public_sg.id}"]
     tags = {
         Name = "${var.Environment}-Tomcat"
         VM = "Tomcat"
@@ -221,7 +214,7 @@ resource "aws_instance" "ZabbixInstance" {
     key_name = "${var.KeyName}"
 
     subnet_id = "${aws_subnet.public_subnet.id}"
-    vpc_security_group_ids = ["${aws_default_security_group.public_sg.id}"]
+    vpc_security_group_ids = ["${aws_security_group.public_sg.id}"]
     tags = {
         Name = "${var.Environment}-Zabbix"
         VM = "Zabbix"

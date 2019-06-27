@@ -31,38 +31,6 @@ resource "aws_internet_gateway" "igw" {
 #   depends_on = ["aws_internet_gateway.igw"]
 # }
 
-
-# resource "aws_s3_bucket" "terraform-state-storage-s3" {
-#     bucket = "tfstate-aws-s3-bucket"
-#     versioning {
-#       enabled = true
-#     }
-#     lifecycle {
-#       prevent_destroy = true
-#     }
-#     tags = {
-#       Name = "S3 Remote Terraform State Store"
-#     }
-# }
-# resource "aws_dynamodb_table" "terraform_state_lock" {
-#   name           = "app-state"
-#   read_capacity  = 1
-#   write_capacity = 1
-#   hash_key       = "LockID"
-
-#   attribute {
-#     name = "LockID"
-#     type = "S"
-#   }
-# }
-terraform {
-    backend "s3" {
-        encrypt = true
-        bucket = "tfstate-aws-s3-bucket"
-        region = "eu-west-3"
-        key = "natgw/terraform.tfstate"
-    }
-}
 #==================================================== Public Subnet =========
 resource "aws_subnet" "public_subnet" {
     vpc_id     = "${aws_vpc.main.id}"
@@ -257,3 +225,24 @@ resource "aws_instance" "ZabbixInstance" {
     }
 }
 # terraform apply -var-file=vpc.tfvars
+# terraform apply -var-file=vpc.tfvars
+# terraform apply -var-file=vpc.tfvars
+
+# # terraform apply -var-file=vpc.tfvars
+# #  + resource "aws_default_route_table" "privat_route"
+# #  + resource "aws_route_table_association" "privat_route_assoc"
+# #  + resource "aws_route_table_association" "public_route_assoc"
+
+#  terraform import aws_vpc.main vpc-0321ac1bf77541e1b
+#  terraform import aws_internet_gateway.igw igw-0e26e3d3a372db2a3
+#  terraform import aws_subnet.public_subnet subnet-0f171c69415460292
+#  terraform import aws_route_table.public_route rtb-05c5f728d093a14c5
+#  terraform import aws_subnet.privat_subnet subnet-011ce27b4b5ab99ae
+#  terraform import aws_default_route_table.privat_route rtb-0668aebf872babd2c
+#  Error: resource aws_default_route_table doesn't support import
+#  terraform import aws_default_security_group.NATGW_sg sg-0d2b33d50a1d8cbb4
+#  terraform import aws_security_group.public_sg sg-05ac91ba1b74c5df9
+#  terraform import aws_instance.NATGWInstance i-085c6fb72a0838288
+#  terraform import aws_instance.BackEndInstance i-022e2ef5b62595a2b
+#  terraform import aws_instance.TomcatInstance i-01b6c51bc96504b47
+#  terraform import aws_instance.ZabbixInstance i-0645ad50701f0b3ed

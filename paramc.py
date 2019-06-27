@@ -80,7 +80,7 @@ def check_opened_port(IpAddress, port):
     try:
         conn.request("GET", "/")
     except ConnectionRefusedError:
-        exit('No connection could be made because the target machine actively refused it') 
+        exit('No connection could be made because the target machine actively refused it')
     response = conn.getresponse()
     # headers = response.getheaders()
     print(response.status)
@@ -102,7 +102,7 @@ def stack_exists(cf_client, stack_name, STACK_STATUS):
     return False
 
 class s3_bucket:
-    "class for working with s3 bucket" 
+    "class for working with s3 bucket"
     def __init__(self, backet_name):
         # del first_bucket_name first_
         self.__s3 = boto3.resource('s3')
@@ -120,7 +120,7 @@ class s3_bucket:
         current_region = session.region_name
         # bucket_name = create_bucket_name(bucket_prefix)
         s3_client.create_bucket(
-            Bucket=bucket_name, 
+            Bucket=bucket_name,
             CreateBucketConfiguration={
             'LocationConstraint': current_region})
         print('create_bucket: ',bucket_name, current_region)
@@ -166,7 +166,7 @@ def main():
     cfg = read_cfg(args.input)
     print('cfg = ', cfg)
 
-    # selecting parameters and tags 
+    # selecting parameters and tags
     parameters = cfg["parameters"]
     tags = cfg["tags"]
     # add to tags STACK name to separate this stack
@@ -186,9 +186,9 @@ def main():
     object_url = s3.get_obj_url(args.s3, args.cloud_formation_key)
 
     cf_client = boto3.client('cloudformation')
-    # validate template via boto3 by passing s3 bucket obj_url 
+    # validate template via boto3 by passing s3 bucket obj_url
     print('ec2.yaml validate = ', cf_client.validate_template(TemplateURL=object_url))
-    # validate template via awscli 
+    # validate template via awscli
     print('stdout = ', run("aws cloudformation validate-template --template-body file://ec2.yaml"))
 
     # # Lets do it
@@ -221,20 +221,20 @@ def main():
     # if action VERIFY - verify stack by boto
     if args.action == "VERIFY":
         result_stack = stack_exists(cf_client, args.stack, ['CREATE_COMPLETE','UPDATE_COMPLETE'])
-        if not result_stack : 
-            exit('stack not ready') 
+        if not result_stack :
+            print('stack not ready')
         result_ec2 = check_run_and_ready(ec2, args.stack, 4)
-        if not result_ec2 : 
-            exit('instances not ready') 
+        if not result_ec2 :
+            exit('instances not ready')
         TomcatIpAddress = get_ec2_IP(ec2, args.stack, 'Tomcat', 'PublicIpAddress', 'running')
-        result_app_port = check_opened_port(TomcatIpAddress, 8080)              
-        if not result_app_port : 
-            exit('application not ready') 
+        result_app_port = check_opened_port(TomcatIpAddress, 8080)
+        if not result_app_port :
+            exit('application not ready')
         print(TomcatIpAddress)
         exit()
 
     ## Checkins created/updated STACK and EC2 instances status and prepare SSH to CM BackEnd
-    # check finish initializing 4 pcs EC2 instances 
+    # check finish initializing 4 pcs EC2 instances
     check_run_and_ready(ec2, args.stack, 4)
 
     # gathering info (public and privet IP) to prepare connection to BackEnd

@@ -4,7 +4,8 @@ variable "aws_region" {
 }
 variable "Environment" {
   description   = "VPC CIDR block parameter must be in the form x.x.x.x/16-28"
-  default       = "PROD"}
+  default       = "PROD"
+}
 variable "STACK" {
   description   = "STACK TAG to describe project"
   default       = "NATGW"

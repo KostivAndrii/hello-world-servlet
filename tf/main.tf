@@ -6,23 +6,22 @@ provider "aws" {
     region = "${var.aws_region}"
 }
 module "vpc" {
-    source                              = "modules/vpc"
-    aws_region     	                    = "eu-west-3"
-    STACK                               = "AWS-NATGW"
-    Environment                         = "QA"
-    KeyName                             = "aws-test-oregon"
-    # NATGW_type                          = "t2.micro"
-    # NATGW_ami                           = "ami-0ebb3a801d5fb8b9b"
-    VPCBlock                            = "10.0.0.0/16"
-    PublicSubnetCIDR                    = "10.0.10.0/24"
-    PrivatSubnetCIDR                    = "10.0.11.0/24"
-    enable_dns_support                  = "true"
+    source                              = "./modules/vpc"
+    aws_region     	                    = "${var.aws_region}"
+    STACK                               = "${var.STACK}"
+    Environment                         = "${var.Environment}"
+    KeyName                             = "${var.KeyName}"
+    NATGW_type                          = "${var.NATGW_type}"
+    NATGW_ami                           = "${var.NATGW_ami}"
+    VPCBlock                            = "${var.VPCBlock}"
+    PublicSubnetCIDR                    = "${var.PublicSubnetCIDR}"
+    PrivatSubnetCIDR                    = "${var.PrivatSubnetCIDR}"
+    # enable_dns_support                  = "true"
     #Internet-GateWay
-    enable_internet_gateway             = "true"
+    # enable_internet_gateway             = "true"
     #NAT
-    enable_nat_gateway                  = "false"
+    # enable_nat_gateway                  = "false"
 }
-
 # # EIP and NAT Gateway
 # resource "aws_eip" "nat_eip" {
 #   vpc      = true
@@ -46,8 +45,8 @@ module "vpc" {
 #       Name = "S3 Remote Terraform State Store"
 #     }
 # }
-# resource "aws_dynamodb_table" "terraform_state_lock" {
-#   name           = "app-state"
+# resource "aws_dynamodb_table" "terraform-state-lock-dynamo" {
+#   name           = "terraform-state-lock-dynamo"
 #   read_capacity  = 1
 #   write_capacity = 1
 #   hash_key       = "LockID"
@@ -57,14 +56,15 @@ module "vpc" {
 #     type = "S"
 #   }
 # }
-# terraform {
-#     backend "s3" {
-#         encrypt = true
-#         bucket = "tfstate-aws-s3-bucket"
-#         region = "eu-west-3"
-#         key = "natgw/terraform.tfstate"
-#     }
-# }
+terraform {
+    backend "s3" {
+        encrypt = true
+        bucket = "tfstate-aws-s3-bucket"
+        region = "eu-west-3"
+        key = "natgw/terraform.tfstate"
+        dynamodb_table = "terraform-state-lock-dynamo"
+    }
+}
 
 #====== BackEnd instance
 resource "aws_instance" "BackEndInstance" {
@@ -72,8 +72,8 @@ resource "aws_instance" "BackEndInstance" {
     instance_type = "${var.server_type}"
     key_name = "${var.KeyName}"
 
-    subnet_id = "${aws_subnet.privat_subnet.id}"
-    vpc_security_group_ids = ["${aws_default_security_group.NATGW_sg.id}"]
+    subnet_id = "${module.vpc.privat_subnet_id}"
+    vpc_security_group_ids = ["${module.vpc.privat_security_group_id}"]
     tags = {
         STACK = "${var.STACK}"
         Name = "${var.Environment}-BackEnd"
@@ -87,8 +87,8 @@ resource "aws_instance" "TomcatInstance" {
     associate_public_ip_address = "true"
     key_name = "${var.KeyName}"
 
-    subnet_id = "${aws_subnet.public_subnet.id}"
-    vpc_security_group_ids = ["${aws_security_group.public_sg.id}"]
+    subnet_id = "${module.vpc.public_subnet_id}"
+    vpc_security_group_ids = ["${module.vpc.public_security_group_id}"]
     tags = {
         STACK = "${var.STACK}"
         Name = "${var.Environment}-Tomcat"
@@ -102,8 +102,8 @@ resource "aws_instance" "ZabbixInstance" {
     associate_public_ip_address = "true"
     key_name = "${var.KeyName}"
 
-    subnet_id = "${aws_subnet.public_subnet.id}"
-    vpc_security_group_ids = ["${aws_security_group.public_sg.id}"]
+    subnet_id = "${module.vpc.public_subnet_id}"
+    vpc_security_group_ids = ["${module.vpc.public_security_group_id}"]
     tags = {
         STACK = "${var.STACK}"
         Name = "${var.Environment}-Zabbix"

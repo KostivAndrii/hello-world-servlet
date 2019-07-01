@@ -12,11 +12,6 @@ pipeline {
                 git branch: 'develop', url: "https://github.com/KostivAndrii/hello-world-servlet.git"
             }
         }
-        stage(‘checkout’) {
-                steps {
-                    git branch: ‘develop’, url: ‘git@your url’
-                }
-            }
         stage(‘Set Terraform path’) {
             steps {
                 script {

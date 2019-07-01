@@ -12,22 +12,22 @@ pipeline {
                 git branch: 'develop', url: "https://github.com/KostivAndrii/hello-world-servlet.git"
             }
         }
-        stage(‘Set Terraform path’) {
+        stage('Set Terraform path') {
             steps {
                 script {
-                    def tfHome = tool name: ‘Terraform’
-                    env.PATH = “${tfHome}:${env.PATH}”
+                    def tfHome = tool name: 'Terraform'
+                    env.PATH = "${tfHome}:${env.PATH}"
                 }
-            sh ‘terraform — version’
+            sh 'terraform — version'
             }
         }
-        stage(‘Provision infrastructure’) {
+        stage('Provision infrastructure') {
             steps {
-                dir(‘dev’) {
-                    sh ‘terraform init’
-                    sh ‘terraform plan -out=plan’
-                    // sh ‘terraform destroy -auto-approve’
-                    sh ‘terraform apply plan’
+                dir('tf') {
+                    sh 'terraform init'
+                    sh 'terraform plan -out=plan'
+                    // sh 'terraform destroy -auto-approve'
+                    sh 'terraform apply plan'
                 }
             }
         }

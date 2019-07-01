@@ -18,7 +18,9 @@ pipeline {
                 sh 'pwd'
                 sh 'ls -la'
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_JENKINS']]) {
-                    sh 'python3 -u ./paramc.py -s=AWS-NATGW -a=BOTO -i=my_cfg.yaml -cf=ec2.yaml -cfk=ec2.yaml -s3=cf-yaml-s3-bucket'
+                    sh 'terraform init'
+                    sh 'terraform apply -var-file=vpc.tfvars'
+//                    sh 'python3 -u ./paramc.py -s=AWS-NATGW -a=BOTO -i=my_cfg.yaml -cf=ec2.yaml -cfk=ec2.yaml -s3=cf-yaml-s3-bucket'
                 }
                 timeout(5) {
                     waitUntil {

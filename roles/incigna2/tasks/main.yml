@@ -1,0 +1,107 @@
+---
+# tasks file for icinga2-ansible-web2-ui
+- set_fact:
+    mysql_password: "{{ pwd_alias }}$"
+
+- name: Install MySQL 5.7 and Icinga2 repos
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - http://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm
+    - https://packages.icinga.com/epel/icinga-rpm-release-7-latest.noarch.rpm
+
+- name: Install MySQL, httpd, epel and scl repos
+  yum:
+    name: "{{ item }}"
+  loop:
+    - epel-release
+    - centos-release-scl
+    - mysql-community-server
+    - mysql-community-client
+    - httpd
+
+- name: Start the MySQL and httpd service
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - mysqld
+    - httpd
+
+- name: Change mysql root password and keep track in and store it in /root/.my.cnf
+  shell: |
+    password_match=`awk '/A temporary password is generated for/ { print $NF }' /var/log/mysqld.log`
+    mysql -uroot -p$password_match --connect-expired-password -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ mysql_password }}'; flush privileges; "
+    echo "[client]
+    user=root
+    password={{ mysql_password }}" > /root/.my.cnf
+  args:
+    creates: /root/.my.cnf
+  register: change_temp_pass
+
+- debug:
+    msg: "MySQL root password {{ mysql_password }}"
+
+- import_tasks: icinga2_web2_create_databases.yml
+
+- name: Install PHP
+  yum:
+    name: "{{ item }}"
+  loop:
+    - rh-php71-php-mysqlnd
+    - rh-php71-php-cli
+    - php-Icinga
+    - rh-php71-php-common
+    - rh-php71-php-fpm
+    - rh-php71-php-pgsql
+    - rh-php71-php-ldap
+    - rh-php71-php-intl
+    - rh-php71-php-xml
+    - rh-php71-php-gd
+    - rh-php71-php-pdo
+    - rh-php71-php-mbstring
+
+- name: Find out timezone
+  slurp:
+     src: /etc/localtime
+  register: etc_localtime
+
+- name: Timezone in php.ini
+  lineinfile:
+    path: /etc/opt/rh/rh-php71/php.ini
+    regexp: '^;?date.timezone ='
+    line: 'date.timezone = Europe/Kiev'
+
+- name: Install icinga2
+  yum:
+    name: "{{ item }}"
+  loop:
+    - icinga2
+    - icinga2-ido-mysql
+    - icingaweb2
+    - icingacli
+    - nagios-plugins-all
+    - icingaweb2-selinux
+
+- name: Start the icinga2 and rh-php71-php-fpm service
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - icinga2
+    - rh-php71-php-fpm
+
+- name: Get setup token.
+  shell: 'icingacli setup token create | sed "s/.*token is: \(.*\)/\1/g"'
+  register: setup_token
+  tags: token
+
+- name: Icinga Web2 Installation finished
+  debug:
+    msg: "The WebUI token is {{ setup_token.stdout }}, us it at http://IP//icingaweb2/setup to continue the installation"
+  tags:
+    - icinga2-ansible-web2-ui-install
+    - token

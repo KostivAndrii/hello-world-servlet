@@ -1,0 +1,29 @@
+---
+# defaults file for icinga2-ansible-web2-ui
+# https://www.linuxtechi.com/install-configure-icinga2-centos-7-rhel-7/
+# https://icinga.com/docs/icinga2/latest/doc/02-getting-started/
+# https://github.com/Icinga/ansible-playbooks
+
+
+icinga2_db: "icinga"
+icinga2_db_pass: "icinga"
+icinga2_db_user: "icinga"
+icinga2_web_mysql_schema: "/usr/share/icinga2-ido-mysql/schema/mysql.sql"
+
+icinga2_ido_mysql_conf: "/etc/icinga2/features-available/ido-mysql.conf"
+
+icinga2_web2_db: "icingaweb"
+icinga2_web2_db_pass: "icingaweb"
+icinga2_web2_db_user: "icingaweb"
+
+enablerepo: "base"
+
+icinga2_web2_ui_rpm:
+ - icingaweb2
+ - icingacli
+ - git
+ - php-yaml
+
+icinga2_web2_ui_deb:
+ - icingaweb2
+ - git

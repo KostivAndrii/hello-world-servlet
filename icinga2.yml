@@ -1,0 +1,6 @@
+---
+- hosts: icinga
+  become: yes
+  gather_facts: true
+  roles:
+    - icinga2

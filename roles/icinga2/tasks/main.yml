@@ -19,6 +19,7 @@
     - centos-release-scl
     - mysql-community-server
     - mysql-community-client
+    - MySQL-python
     - httpd
 
 - name: Start the MySQL and httpd service

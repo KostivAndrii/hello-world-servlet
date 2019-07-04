@@ -45,8 +45,6 @@
 - debug:
     msg: "MySQL root password {{ mysql_password }}"
 
-- import_tasks: icinga2_web2_create_databases.yml
-
 - name: Install PHP
   yum:
     name: "{{ item }}"
@@ -86,6 +84,8 @@
     - nagios-plugins-all
     - icingaweb2-selinux
 
+- import_tasks: icinga2_web2_create_databases.yml
+
 - name: Start the icinga2 and rh-php71-php-fpm service
   service:
     name: "{{ item }}"
@@ -94,6 +94,12 @@
   loop:
     - icinga2
     - rh-php71-php-fpm
+
+- name: restart httpd
+  service:
+    name: httpd
+    state: restarted
+    enabled: yes
 
 - name: Get setup token.
   shell: 'icingacli setup token create | sed "s/.*token is: \(.*\)/\1/g"'
@@ -106,3 +112,6 @@
   tags:
     - icinga2-ansible-web2-ui-install
     - token
+
+#$ touch /var/www/html/index.html
+#$ chmod 755 /var/www/html/index.html

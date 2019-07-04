@@ -6,14 +6,14 @@
 
 
 icinga2_db: "icinga"
-icinga2_db_pass: "icinga"
+icinga2_db_pass: "ifVaysRZTnV1fWj7qqjT$"
 icinga2_db_user: "icinga"
 icinga2_web_mysql_schema: "/usr/share/icinga2-ido-mysql/schema/mysql.sql"
 
 icinga2_ido_mysql_conf: "/etc/icinga2/features-available/ido-mysql.conf"
 
 icinga2_web2_db: "icingaweb"
-icinga2_web2_db_pass: "icingaweb"
+icinga2_web2_db_pass: "ifVaysRZTnV1fWj7qqjT$"
 icinga2_web2_db_user: "icingaweb"
 
 enablerepo: "base"

@@ -1,0 +1,109 @@
+yum install http://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm
+
+yum install mysql-community-server mysql-community-client
+
+systemctl start mysqld
+systemctl enable mysqld
+awk '/A temporary password is generated for/ { print $NF }' /var/log/mysqld.log
+mysql -uroot -p
+
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'icinga'; flush privileges;
+SHOW GLOBAL VARIABLES LIKE 'validate_password%';
+SET GLOBAL  validate_password_length = 4;
+SET GLOBAL validate_password_policy = LOW;
+
+
+yum install https://packages.icinga.com/epel/icinga-rpm-release-7-latest.noarch.rpm
+
+yum install epel-release centos-release-scl 
+
+# RHEL epel installation
+# RHEL yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+# subscription-manager repos --enable rhel-7-server-optional-rpms
+# subscription-manager repos --enable rhel-server-rhscl-7-rpms
+
+yum install rh-php71-php-mysqlnd rh-php71-php-cli php-Icinga rh-php71-php-common rh-php71-php-fpm rh-php71-php-pgsql rh-php71-php-ldap rh-php71-php-intl rh-php71-php-xml rh-php71-php-gd rh-php71-php-pdo rh-php71-php-mbstring -y
+sudo vi /etc/opt/rh/rh-php71/php.ini
+# date.timezone = Europe/Kiev
+
+yum install icinga2 
+systemctl enable icinga2
+systemctl start icinga2
+icinga2 feature list
+
+yum install icinga2-ido-mysql icingaweb2 icingacli nagios-plugins-all
+yum install icingaweb2-selinux  -y
+
+systemctl start httpd.service
+systemctl enable httpd.service
+systemctl start icinga2.service
+systemctl enable icinga2.service
+systemctl start rh-php71-php-fpm.service
+systemctl enable rh-php71-php-fpm.service
+
+
+mysql -u root -p icinga < /usr/share/icinga2-ido-mysql/schema/mysql.sql
+
+# enabling ido-mysql
+icinga2 feature enable ido-mysql
+systemctl restart icinga2
+icinga2 feature list
+
+# installing api
+icinga2 api setup
+systemctl restart icinga2
+icinga2 feature list
+
+finish config http://192.168.237.105/icingaweb2/setup
+
+
+yum localinstall mysql57-community-release-el7-11.noarch.rpm
+yum install mysql-community-server mysql-community-client
+systemctl start mysqld
+systemctl enable mysqld
+awk '/A temporary password is generated for/ { print $NF }' /var/log/mysqld.log
+mysql -uroot -p
+yum install epel-release centos-release-scl centos-release-scl-rh
+yum install https://packages.icinga.com/epel/icinga-rpm-release-7-latest.noarch.rpm
+yum install rh-php71-php-mysqlnd rh-php71-php-cli php-Icinga rh-php71-php-common rh-php71-php-fpm rh-php71-php-pgsql rh-php71-php-ldap rh-php71-php-intl rh-php71-php-xml rh-php71-php-gd rh-php71-php-pdo rh-php71-php-mbstring -y
+sudo vi /etc/opt/rh/rh-php71/php.ini
+yum install httpd
+yum install icinga2
+systemctl enable icinga2
+systemctl start icinga2
+icinga2 feature list
+yum install icinga2-ido-mysql icingaweb2 icingacli nagios-plugins-all
+systemctl restart icinga2
+yum install icingaweb2-selinux  -y
+systemctl start httpd.service
+systemctl enable httpd.service
+systemctl start rh-php71-php-fpm.service
+systemctl enable rh-php71-php-fpm.service
+
+
+
+
+===================================================    client install ==============
+yum install https://packages.icinga.com/epel/icinga-rpm-release-7-latest.noarch.rpm
+yum install icinga2
+yum install epel-release
+yum install nagios-plugins-all
+# RHEL sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-7-11.noarch.rpm
+# RHEL subscription-manager repos --enable rhel-7-server-optional-rpms
+yum install icinga2-selinux
+icinga2 node wizard
+
+======================   add host in Icinga2 serveer into 
+# https://www.techrepublic.com/article/how-to-add-remote-hosts-to-the-icinga2-monitoring-system/
+vi /etc/icinga2/conf.d/hosts.conf
+------------------------
+object Host "icinga2c" {
+  import "generic-host"
+  address = "192.168.237.106"
+  check_command = "hostalive"
+}
+------------------------
+systemctl restart icinga2
+===============================================================
+
+https://itcrowd.top/director

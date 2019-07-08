@@ -1,1 +1,1 @@
-[{"Value": "3.2.111", "Key": "SNAPSHOT"}, {"Value": "QA", "Key": "env"}, {"Value": "qa_ok@ob.com", "Key": "e-mail"}, {"Value": "AWS-NATGW", "Key": "STACK"}]
+[{"Key": "env", "Value": "QA"}, {"Key": "e-mail", "Value": "qa_ok@ob.com"}, {"Key": "SNAPSHOT", "Value": "3.2.111"}, {"Key": "STACK", "Value": "AWS-NATGW"}]

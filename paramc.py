@@ -68,12 +68,12 @@ def check_run_and_ready(ec2, STACK_name, ec2_amount):
             waiter.wait(InstanceIds=[instance.id])
     return True if ec2_run_amount == ec2_amount else False
 
-def get_ec2_IP(ec2, STACK_name, VM, IpAddress, state):
+def get_ec2_IP(ec2, STACK_name, VM, IpAddressLabel, state):
     custom_filter = [{'Name':'tag:STACK', 'Values': [STACK_name]}, \
                      {'Name':'tag:VM', 'Values': [VM]}, \
                      {'Name': 'instance-state-name', 'Values': [state]}]
     response = ec2.meta.client.describe_instances(Filters=custom_filter)
-    return response['Reservations'][0]['Instances'][0][IpAddress]
+    return response['Reservations'][0]['Instances'][0][IpAddressLabel]
 
 def check_opened_port(IpAddress, port):
     conn = http.client.HTTPConnection(IpAddress, 8080)
@@ -145,15 +145,14 @@ class s3_bucket:
 def main():
     # # procassing input parameters
     parser = argparse.ArgumentParser(description='Programm to work with AWS')
+    parser.add_argument('-a','--action', help='what to do CREATE/UPDATE/BOTO/VERIFY')
     parser.add_argument("-s","--stack", help="STACK name", type=str)
-    parser.add_argument('-a','--action', help='what to do CREATE/UPDATE/BOTO')
-    parser.add_argument('-i','--input', help='file with parameters and tags')
-    parser.add_argument('-cf','--cloud-formation', help='file with parameters and tags')
-    parser.add_argument('-cfk','--cloud-formation-key', help='file with parameters and tags')
-    parser.add_argument('-s3','--s3', help='file with parameters and tags')
+    parser.add_argument('-cf','--cloud-formation', help='file with cloud-formation templates')
+    parser.add_argument('-i','--input', help='file with input parameters and tags')
+    parser.add_argument('-s3','--s3', help='AWS S3 bucked name to store cloud-formation templates')
+    parser.add_argument('-cfk','--cloud-formation-key', help='AWS S3 bucked key to store cloud-formation templates')
     args = parser.parse_args()
 
-    # sys.stdout.flush()
     if args.action not in allowed_action:
         print('wrong action - we process only', allowed_action)
         sys.exit()

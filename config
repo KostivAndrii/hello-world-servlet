@@ -1,13 +1,13 @@
 ### jump server ###
 Host bastion
-    HostName 35.181.56.44
+    HostName 35.180.164.19
     Port 22
     User ec2-user
     StrictHostKeyChecking no
     ForwardAgent yes
 
 Host db
-    HostName 10.200.11.175
+    HostName 10.200.11.92
     ProxyJump bastion
     Port 22
     User ec2-user

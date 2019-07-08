@@ -9,10 +9,10 @@ pwd_alias_u: "{{ lookup('password', '/dev/null chars=ascii_letters,digits') }}"
 # modules installaiton
 modules_dir: "/usr/share/icingaweb2/modules"
 
-modules_list:
-  - cube
-  - toplevelview
-  - businessprocess
+# modules_list:
+#   - cube
+#   - toplevelview
+#   - businessprocess
 
 icinga2_db_user_privileges: INSERT,SELECT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE
 icinga2_web2_db_user_privileges: INSERT,SELECT,UPDATE,DELETE,DROP,CREATE VIEW,INDEX,EXECUTE

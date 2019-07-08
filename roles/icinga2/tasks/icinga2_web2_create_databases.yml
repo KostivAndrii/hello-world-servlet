@@ -35,8 +35,15 @@
   command: "icinga2 feature enable ido-mysql"
   register: features_result
   changed_when: "'for these changes to take effect' in features_result.stdout"
-  notify:
-    - restart icinga2
+  # notify:
+  #   - restart icinga2
+
+- name: restart icinga2
+  service:
+    name: icinga2
+    state: restarted
+    enabled: yes
+
 
 - name: Create a Web Database for Icinga2
   mysql_db:

@@ -105,14 +105,10 @@
 - name: Get setup token.
   shell: 'icingacli setup token create | sed "s/.*token is: \(.*\)/\1/g"'
   register: setup_token
-  tags: token
 
 - name: Icinga Web2 Installation finished
   debug:
     msg: "The WebUI token is {{ setup_token.stdout }}, us it at http://IP//icingaweb2/setup to continue the installation"
-  tags:
-    - icinga2-ansible-web2-ui-install
-    - token
 
 #$ touch /var/www/html/index.html
 #$ chmod 755 /var/www/html/index.html
@@ -138,4 +134,123 @@
 # }
 # ------------------------
 # systemctl restart icinga2
-# ===============================================================
+# ==========================  API install / config
+# icinga2 feature list
+# icinga2 feature enable api
+# icinga2 api setup
+# systemctl restart icinga2
+# ==========================  director install / config
+# username = "director"
+# password = "ifVaysRZTnV1fWj7qqjT$"
+
+# CREATE DATABASE director CHARACTER SET 'utf8'; GRANT ALL ON director.* TO director@localhost IDENTIFIED BY 'ifVaysRZTnV1fWj7qqjT$';
+# yum install -y git
+
+# mkdir -p /usr/share/icingaweb2/modules
+# cd /usr/share/icingaweb2/modules
+# sudo git clone https://github.com/Icinga/icingaweb2-module-director.git director
+
+# vi /etc/icingaweb2/resources.ini
+# [Director DB]
+# type = "db"
+# db = "mysql"
+# host = "localhost"
+# dbname = "director"
+# username = "director"
+# password = "ifVaysRZTnV1fWj7qqjT$"
+# charset = "utf8"
+
+# vi /etc/icinga2/conf.d/api-users.conf
+# object ApiUser "director" {
+#   password = "ifVaysRZTnV1fWj7qqjT$"
+#   permissions = [ "*" ]
+# }
+	
+# sudo service icinga2 restart
+
+# https://blog.it-kb.ru/2017/01/25/deploy-and-configure-icinga-2-on-debian-8-6-part-6-icinga-director-1-2-0-deployment-and-configuration-of-zones-commands-services-host-templates/
+# https://www.howtoforge.com/tutorial/add-a-new-host-and-service-to-be-monitored-by-icinga2/
+# https://www.howtoforge.com/how-to-add-hosts-to-icinga2-using-the-icinga-director/
+
+
+# icinga2 object list --type CheckCommand --name nrpe
+# cat /usr/share/icinga2/include/command-plugins.conf
+# /usr/lib64/nagios/plugins/
+# rpm -ql icinga2
+# rpm -qa | grep nagios
+
+# /etc/icinga2/conf.d/
+# /etc/icinga2/conf.d/hosts.conf - local host config
+# /etc/icinga2/conf.d/template.conf  - local template
+
+# template Host "P1" {
+#   import "generic-host"
+#   max_check_attempts = 3
+#   check_interval = 1m
+#   retry_interval = 30s
+
+#   check_command = "hostalive"
+# }
+
+# template Host "P2" {
+#   import "generic-host"
+#   max_check_attempts = 4
+#   check_interval = 5m
+#   retry_interval = 30s
+
+#   check_command = "hostalive"
+# }
+
+# template Host "P3" {
+#   import "generic-host"
+#   max_check_attempts = 5
+#   check_interval = 15m
+#   retry_interval = 30s
+
+#   check_command = "hostalive"
+# }
+
+# template Host "P1" {
+#   import "generic-host"
+#   max_check_attempts = 3
+#   check_interval = 1m
+#   retry_interval = 30s
+
+#   check_command = "hostalive"
+# }
+
+# template Host "P2" {
+#   import "generic-host"
+#   max_check_attempts = 4
+#   check_interval = 5m
+#   retry_interval = 30s
+
+#   check_command = "hostalive"
+# }
+
+# template Host "P3" {
+#   import "generic-host"
+#   max_check_attempts = 5
+#   check_interval = 15m
+#   retry_interval = 30s
+
+#   check_command = "hostalive"
+# }
+
+# /etc/icinga2/conf.d/hosts.conf
+# object Host "myhost1"  {
+#   import "P2"
+#   address = "127.0.0.1"
+#   vars.os = "Linux"
+#   vars.http_vhosts["http"] = {
+#     http_uri = "/"
+#   }
+#   vars.disks["disk"] = {
+#   }
+#   vars.disks["disk /"] = {
+#     disk_partitions = "/"
+#   }
+#   vars.notification["mail"] = {
+#     groups = [ "icingaadmins" ]
+#   }
+# }

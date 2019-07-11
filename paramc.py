@@ -180,6 +180,9 @@ def main():
     # uploading template into S# bucket for deploying and validating cf-template
     s3 = s3_bucket(args.s3)
     print(dir(s3))
+    print(s3._s3_bucket__s3)
+    print(s3.__s3)
+
     s3.del_obj(args.cloud_formation_key)
     s3.upload_obj(args.s3, args.cloud_formation, args.cloud_formation_key)
     object_url = s3.get_obj_url(args.s3, args.cloud_formation_key)

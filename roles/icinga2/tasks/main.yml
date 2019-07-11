@@ -123,7 +123,7 @@
 # yum install icinga2-selinux
 # icinga2 node wizard
 
-# ======================   add host in Icinga2 serveer into 
+# ======================   add host in Icinga2 serveer into
 # # https://www.techrepublic.com/article/how-to-add-remote-hosts-to-the-icinga2-monitoring-system/
 # vi /etc/icinga2/conf.d/hosts.conf
 # ------------------------
@@ -139,6 +139,8 @@
 # icinga2 feature enable api
 # icinga2 api setup
 # systemctl restart icinga2
+# finish configure backend API: configuration/modules/monitoring/backends/command transport
+# use API Username/API Password from /etc/icinga2/conf.d/api-users.conf
 # ==========================  director install / config
 # username = "director"
 # password = "ifVaysRZTnV1fWj7qqjT$"
@@ -168,6 +170,8 @@
 
 # graphite
 # icinga2 feature enable perfdata
+# git clone https://github.com/Icinga/icingaweb2-module-graphite.git  graphite
+# https://www.unixmen.com/install-graphite-centos-7/
 # https://www.server-world.info/en/note?os=CentOS_7&p=graphite
 # https://sites.google.com/site/salinuxacademy/monitoring/icinga-2/icinga2-and-graphite
 # port 8008
@@ -226,32 +230,58 @@
 #   check_command = "hostalive"
 # }
 
-# template Service "P1" {
-#   import "generic-service"
-#   max_check_attempts = 5
+# template Service "service_P1" {
+#   max_check_attempts = 4
 #   check_interval = 2m
 #   retry_interval = 30s
+#   icon_image = "success_petrol.png"
 # }
 
-# template Service "P2" {
-#   import "generic-service"
+# template Service "service_P2" {
 #   max_check_attempts = 3
 #   check_interval = 10m
 #   retry_interval = 30s
+#   icon_image = "success.png"
 # }
 
-# template Service "P3" {
-#   import "generic-service"
+# template Service "service_P3" {
 #   max_check_attempts = 2
 #   check_interval = 20m
 #   retry_interval = 30s
-}
+#   icon_image = "pdf.png"
+# }
+
+# /etc/icinga2/conf.d/services.conf
+# apply Service "service_P1" {
+#   import "service_P1"
+
+#   check_command = "ssh"
+
+#   assign where host.vars.servP == "P1"
+# }
+
+# apply Service "service_P2" {
+#   import "service_P2"
+
+#   check_command = "ssh"
+
+#   assign where host.vars.servP == "P2"
+# }
+
+# apply Service "service_P3" {
+#   import "service_P3"
+
+#   check_command = "ssh"
+
+#   assign where host.vars.servP == "P3"
+# }
 
 # /etc/icinga2/conf.d/hosts.conf
-# object Host "myhost1"  {
-#   import "P2"
-#   address = "127.0.0.1"
+# object Host "icinga2client"  {
+#   import "P3"
+#   address = "192.168.237.106"
 #   vars.os = "Linux"
+#   vars.servP = "P3"
 #   vars.http_vhosts["http"] = {
 #     http_uri = "/"
 #   }
@@ -264,3 +294,79 @@
 #     groups = [ "icingaadmins" ]
 #   }
 # }
+
+# object Service "http_icinga2c"  {
+#   max_check_attempts = 3
+#   check_interval = 10m
+#   retry_interval = 30s
+#   host_name = "icinga2c"
+#   check_command = "http"
+# }
+
+# object Service "ssh_icinga2c"  {
+#   max_check_attempts = 2
+#   check_interval = 20m
+#   retry_interval = 30s
+#   host_name = "icinga2c"
+#   check_command = "ssh"
+# }
+
+# http://formvalidate.com/how-to-configure-graphite-into-centos-linux
+# https://github.com/nestihacky/ansible-role-graphite
+
+
+
+# https://comtronic.com.au/how-to-install-graphite-on-centos7/
+# yum install httpd mod_wsgi python-pip python-devel git pycairo libffi-devel
+# cd /usr/local/src
+# git clone https://github.com/graphite-project/graphite-web.git
+# git clone https://github.com/graphite-project/carbon.git
+# python /usr/local/src/graphite-web/check-dependencies.py
+# yum install gcc
+# pip install -r /usr/local/src/graphite-web/requirements.txt
+# python -m pip install --upgrade pip setuptools
+# python -m pip install django
+# pip install -r /usr/local/src/graphite-web/requirements.txt
+# pip show django-tagging
+# python /usr/local/src/graphite-web/check-dependencies.py
+# cd /usr/local/src/carbon/
+# python setup.py install
+# cd /usr/local/src/graphite-web/
+# sudo python setup.py install
+# cp /opt/graphite/conf/carbon.conf.example /opt/graphite/conf/carbon.conf
+# cp /opt/graphite/conf/storage-schemas.conf.example /opt/graphite/conf/storage-schemas.conf
+# vi /opt/graphite/conf/storage-schemas.conf
+# cp /opt/graphite/conf/storage-aggregation.conf.example /opt/graphite/conf/storage-aggregation.conf
+# vi /opt/graphite/conf/storage-aggregation.conf
+# cp /opt/graphite/conf/relay-rules.conf.example /opt/graphite/conf/relay-rules.conf
+# vi /opt/graphite/conf/relay-rules.conf
+# vi /opt/graphite/conf/carbon.conf
+# cp /opt/graphite/conf/aggregation-rules.conf.example /opt/graphite/conf/aggregation-rules.conf
+# vi opt/graphite/conf/aggregation-rules.conf
+# vi /opt/graphite/conf/aggregation-rules.conf.example
+# vi /opt/graphite/conf/aggregation-rules.conf
+# ls /usr/local/src/carbon/distro/redhat/init.d/carbon-*
+# cp /usr/local/src/carbon/distro/redhat/init.d/carbon-* /etc/init.d/
+# chmod +x /etc/init.d/carbon-*
+# ls -la /etc/init.d/carbon-*
+# systemctl start carbon-cache
+# systemctl start carbon-relay
+# systemctl start carbon-aggregator
+# cp /opt/graphite/webapp/graphite/local_settings.py.example /opt/graphite/webapp/graphite/local_settings.py
+# vi /opt/graphite/webapp/graphite/local_settings.py
+# cd /opt/graphite
+# sudo PYTHONPATH=/opt/graphite/webapp/ django-admin.py migrate --settings=graphite.settings
+# sudo PYTHONPATH=/opt/graphite/webapp/ django-admin.py collectstatic --settings=graphite.settings
+# chown -R apache:apache /opt/graphite/storage/
+# chown -R apache:apache /opt/graphite/static/
+# chown -R apache:apache /opt/graphite/webapp/
+# cp /opt/graphite/conf/graphite.wsgi.example /opt/graphite/conf/graphite.wsgi
+# cp /opt/graphite/examples/example-graphite-vhost.conf /etc/httpd/conf.d/graphite.conf
+# vi /etc/httpd/conf.d/graphite.conf
+# pwd
+# mkdir /opt/graphite/secure
+# chown -R apache:apache /opt/graphite/secure
+# htpasswd -c /opt/graphite/secure/.passwd sammy
+# vi /etc/httpd/conf.d/graphite.conf
+# systemctl stop httpd
+# systemctl start httpd

@@ -16,4 +16,8 @@ icinga2_web2_db: "icingaweb"
 icinga2_web2_db_pass: "{{ icinga2_db_pass }}"
 icinga2_web2_db_user: "icingaweb"
 
+graphite_secret_key: "{{ icinga2_db_pass }}"
+graphite_time_zone: "Europe/Kiev"
+
+
 enablerepo: "base"

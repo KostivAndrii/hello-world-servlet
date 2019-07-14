@@ -25,7 +25,7 @@
 # icinga2 api setup
 # systemctl restart icinga2
 # finish configure backend API: configuration/modules/monitoring/backends/command transport
-# use API Username/API Password from /etc/icinga2/conf.d/api-users.conf
+# use API Username/API Password from /etc/icinga2/conf.d/api-users.conf 9b223fc924a81e37
 # ==========================  director install / config
 # username = "director"
 # password = "ifVaysRZTnV1fWj7qqjT$"
@@ -84,6 +84,7 @@
 # https://assets.nagios.com/downloads/nagioscore/docs/nagioscore/3/en/objectdefinitions.html
 # /usr/share/icinga2/include/command-plugins.conf - command list
 
+# /etc/icinga2/conf.d/template.conf
 # template Host "P1" {
 #   import "generic-host"
 #   max_check_attempts = 3
@@ -258,6 +259,7 @@
 
 # /usr/bin/graphite-manage syncdb --noinput
 # ls -la /var/lib/graphite-web/graphite.db
+# /usr/bin/graphite-build-index
 # chown -R apache:apache /var/lib/graphite-web/
 # systemctl restart carbon-cache
 # systemctl restart httpd

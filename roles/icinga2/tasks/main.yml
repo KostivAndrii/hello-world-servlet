@@ -30,36 +30,32 @@
     - python-devel
     - libffi-devel
 
-- name: pip install docker-py and awscli
+- name: pip install django django-tagging
   pip:
     name: "{{ item }}"
   loop:
     [ django, django-tagging===0.3.6 ]
 
 - name: graphite-web config file
-  template: src=local_settings.py dest=/etc/graphite-web/local_settings.py owner=root group=root mode=644
-  notify:
-  - restart httpd
+  template: 
+    src: local_settings.py 
+    dest: /etc/graphite-web/local_settings.py 
+    owner: root 
+    group: root 
+    mode: 644
 
 - name: create data directory
   file:
     path: /etc/httpd/conf.d/graphite/
     state: directory
 
-- name: graphite-web config file
+- name: graphite-web apache config
   copy:
-    src: local_settings.py
-    dest: /etc/graphite-web/local_settings.py
-
-- name: Start the MySQL and httpd service
-  service:
-    name: "{{ item }}"
-    state: started
-    enabled: true
-  loop:
-    - mysqld
-    - httpd
-    - carbon-cache
+    src: graphite-web.conf
+    dest: /etc/httpd/conf.d/graphite/graphite-web.conf
+    owner: root 
+    group: root 
+    mode: 644
 
 - name: initialize graphite-web database
   command: /usr/bin/graphite-manage syncdb --noinput
@@ -72,7 +68,21 @@
     creates: /var/lib/graphite-web/index
 
 - name: chown the sqlite database to apache.apache
-  file: path=/var/lib/graphite-web/ owner=apache group=apache recurse=yes
+  file: 
+    path: /var/lib/graphite-web/ 
+    owner: apache 
+    group: apache 
+    recurse: yes
+
+- name: Start the MySQL and httpd service
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - mysqld
+    - httpd
+    - carbon-cache
 
 - name: Change mysql root password and keep track in and store it in /root/.my.cnf
   shell: |
@@ -85,8 +95,8 @@
     creates: /root/.my.cnf
   register: change_temp_pass
 
-- debug:
-    msg: "MySQL root password {{ mysql_password }}"
+# - debug:
+#     msg: "MySQL root password {{ mysql_password }}"
 
 - name: Install PHP
   yum:
@@ -105,10 +115,10 @@
     - rh-php71-php-pdo
     - rh-php71-php-mbstring
 
-- name: Find out timezone
-  slurp:
-     src: /etc/localtime
-  register: etc_localtime
+# - name: Find out timezone
+#   slurp:
+#      src: /etc/localtime
+#   register: etc_localtime
 
 - name: Timezone in php.ini
   lineinfile:
@@ -141,17 +151,66 @@
 
 - name: restart httpd
   service:
-    name: httpd
+    name: "{{ item }}"
     state: restarted
     enabled: yes
+  loop:
+    - httpd
+    - carbon-cache
 
 - name: Get setup token.
   shell: 'icingacli setup token create | sed "s/.*token is: \(.*\)/\1/g"'
   register: setup_token
+ 
+- name: Enable icinga2 feature perfdata graphite
+  icinga2_feature:
+    name: "{{ item }}"
+    state: present
+  loop: 
+    - perfdata
+    - graphite
+
+- name: clone icingaweb2-module-graphite
+  git:
+    repo: https://github.com/Icinga/icingaweb2-module-graphite.git
+    dest: /usr/share/icingaweb2/modules/graphite
+
+- name: restart icinga2
+  service:
+    name: icinga2
+    state: restarted
+
+- name: create graphite modules config directory
+  file:
+    path: /etc/icingaweb2/modules/graphite/
+    state: directory
+    owner: apache 
+    group: icingaweb2 
+    mode: '0770'
+
+- name: icingaweb2-module-graphite config file
+  template: 
+    src: config.ini
+    dest: /etc/icingaweb2/modules/graphite/config.ini 
+    owner: apache 
+    group: icingaweb2 
+    mode: '0660'
 
 - name: Icinga Web2 Installation finished
   debug:
-    msg: "The WebUI token is {{ setup_token.stdout }}, us it at http://IP//icingaweb2/setup to continue the installation"
+    msg: "The WebUI token is {{ setup_token.stdout }}, us it at http://{{ ansible_host }}/icingaweb2/setup to continue the installation"
+
+- debug:
+    msg: "MySQL root password {{ mysql_password }}"
+
+- debug:
+    msg: "MySQL icinga/icingaweb password {{ icinga2_db_pass }}"
+
+- name: create /var/www/html/index.html
+  file:
+    path: /var/www/html/index.html
+    state: touch
+    mode: '0755'
 
 # icinga2 feature list
 # icinga2 feature enable perfdata graphite
@@ -160,5 +219,228 @@
 # systemctl restart icinga2
 # https://www.linuxtechi.com/install-configure-icinga2-centos-7-rhel-7/
 
-#$ touch /var/www/html/index.html
-#$ chmod 755 /var/www/html/index.html
+# touch /var/www/html/index.html
+# chmod 755 /var/www/html/index.html
+
+# /usr/bin/graphite-manage syncdb --noinput
+# ls -la /var/lib/graphite-web/graphite.db
+# /usr/bin/graphite-build-index
+# chown -R apache:apache /var/lib/graphite-web/
+# systemctl restart carbon-cache
+# systemctl restart httpd
+
+# icinga2 daemon -C - check icinga2 config
+# systemctl reload icinga2
+# icinga2 object list --type CheckCommand --name nrpe
+
+# /etc/icinga2/conf.d/template.conf
+# template Host "P1" {
+#   import "generic-host"
+#   max_check_attempts = 3
+#   check_interval = 1m
+#   retry_interval = 30s
+#   /* select image from folder - /usr/share/icingaweb2/public/img */
+#   icon_image = "save.png"
+
+#   check_command = "hostalive"
+# }
+
+# template Host "P2" {
+#   import "generic-host"
+#   max_check_attempts = 4
+#   check_interval = 5m
+#   retry_interval = 30s
+#   icon_image = "service.png"
+
+#   check_command = "hostalive"
+# }
+
+# template Host "P3" {
+#   import "generic-host"
+#   max_check_attempts = 5
+#   check_interval = 15m
+#   retry_interval = 30s
+#   icon_image = "json.png"
+
+#   check_command = "hostalive"
+# }
+
+# template Service "service_P1" {
+#   max_check_attempts = 4
+#   check_interval = 2m
+#   retry_interval = 30s
+#   icon_image = "success_petrol.png"
+# }
+
+# template Service "service_P2" {
+#   max_check_attempts = 3
+#   check_interval = 10m
+#   retry_interval = 30s
+#   icon_image = "success.png"
+# }
+
+# template Service "service_P3" {
+#   max_check_attempts = 2
+#   check_interval = 20m
+#   retry_interval = 30s
+#   icon_image = "pdf.png"
+# }
+
+# /etc/icinga2/conf.d/services.conf
+# apply Service "check service status" {
+#     import "generic-service"
+#     check_command = "check_serv"
+
+#     assign where host.vars.serv
+# }
+
+# apply Service "service_P1" {
+#   import "service_P1"
+#   check_command = "ssh"
+
+#   assign where host.vars.servP == "P1"
+# }
+
+# apply Service "service_P2" {
+#   import "service_P2"
+#   check_command = "ssh"
+
+#   assign where host.vars.servP == "P2"
+# }
+
+# apply Service "service_P3" {
+#   import "service_P3"
+
+#   check_command = "ssh"
+
+#   assign where host.vars.servP == "P3"
+# }
+
+# /etc/icinga2/conf.d/hosts.conf
+# object Host "icinga2client"  {
+#   import "P3"
+#   address = "192.168.237.106"
+#   vars.serv = "httpd"
+#   vars.os = "Linux"
+#   vars.servP = "P3"
+#   vars.http_vhosts["http"] = {
+#     http_uri = "/"
+#   }
+#   vars.disks["disk"] = {
+#   }
+#   vars.disks["disk /"] = {
+#     disk_partitions = "/"
+#   }
+#   vars.notification["mail"] = {
+#     groups = [ "icingaadmins" ]
+#   }
+# }
+
+# object Service "http_icinga2c"  {
+#   max_check_attempts = 3
+#   check_interval = 10m
+#   retry_interval = 30s
+#   host_name = "icinga2client"
+#   check_command = "http"
+# }
+
+# object Service "ssh_icinga2c"  {
+#   max_check_attempts = 2
+#   check_interval = 20m
+#   retry_interval = 30s
+#   host_name = "icinga2client"
+#   check_command = "ssh"
+# }
+
+# /etc/icinga2/conf.d/commands.conf
+# object CheckCommand "check_serv" {
+#   command = [ PluginDir + "/check_serv", "$serv$" ]
+# }
+# ============================================ custom check script ==============
+# #!/bin/bash
+
+# serv=$1
+# echo "Check service(s):  $serv"
+# check_status=0
+
+# for var in $serv
+# do
+#     active_status=$(/bin/systemctl is-active $var)
+#     enabled_status=$(/bin/systemctl is-enabled $var)
+
+#     if [[ $active_status == "active" && $enabled_status == "enabled" && check_status -eq 0 ]]; then
+#                 echo "OK - $var service status"
+#                 check_status=0
+#         elif [[ $active_status == "active" && $enabled_status != "enabled" && check_status -le  1 ]]; then
+#                 echo "WARNING - $var service status"
+#                 check_status=1
+#         elif [[ $active_status != "active" && check_status -le  2 ]]; then
+#                 echo "CRITICAL - $var service status"
+#                 check_status=2
+#         else
+#                 echo "UNKNOWN - $var : $active_status $enabled_status"
+#                 exit 3
+#     fi
+# done
+
+
+# case "$check_status" in
+#     0) exit 0 ;;
+#     1) exit 1 ;;
+#     2) exit 2 ;;
+# esac
+
+# ===================================================    client install ==============
+# yum install https://packages.icinga.com/epel/icinga-rpm-release-7-latest.noarch.rpm
+# yum install icinga2
+# yum install epel-release
+# yum install nagios-plugins-all
+# # RHEL sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-7-11.noarch.rpm
+# # RHEL subscription-manager repos --enable rhel-7-server-optional-rpms
+# yum install icinga2-selinux
+# icinga2 node wizard
+
+# ======================   add host in Icinga2 serveer into
+# # https://www.techrepublic.com/article/how-to-add-remote-hosts-to-the-icinga2-monitoring-system/
+# vi /etc/icinga2/conf.d/hosts.conf
+# ------------------------
+# object Host "icinga2c" {
+#   import "generic-host"
+#   address = "192.168.237.106"
+#   check_command = "hostalive"
+# }
+# ------------------------
+# systemctl restart icinga2
+# ==========================  API install / config
+# icinga2 feature list
+# icinga2 feature enable api
+# icinga2 api setup
+# systemctl restart icinga2
+# finish configure backend API: configuration/modules/monitoring/backends/command transport
+# use API Username/API Password from /etc/icinga2/conf.d/api-users.conf 9b223fc924a81e37
+# ==========================  director install / config
+# username = "director"
+# password = "ifVaysRZTnV1fWj7qqjT$"
+
+# CREATE DATABASE director CHARACTER SET 'utf8'; GRANT ALL ON director.* TO director@localhost IDENTIFIED BY 'ifVaysRZTnV1fWj7qqjT$';
+# yum install -y git
+
+# mkdir -p /usr/share/icingaweb2/modules
+# cd /usr/share/icingaweb2/modules
+# sudo git clone https://github.com/Icinga/icingaweb2-module-director.git director
+
+# vi /etc/icingaweb2/resources.ini
+# [Director DB]
+# type = "db"
+# db = "mysql"
+# host = "localhost"
+# dbname = "director"
+# username = "director"
+# password = "ifVaysRZTnV1fWj7qqjT$"
+# charset = "utf8"
+
+# vi /etc/icinga2/conf.d/api-users.conf
+# object ApiUser "director" {
+#   password = "ifVaysRZTnV1fWj7qqjT$"
+#   permissions = [ "*" ]
+# }

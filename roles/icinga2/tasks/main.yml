@@ -37,11 +37,11 @@
     [ django, django-tagging===0.3.6 ]
 
 - name: graphite-web config file
-  template: 
-    src: local_settings.py 
-    dest: /etc/graphite-web/local_settings.py 
-    owner: root 
-    group: root 
+  template:
+    src: local_settings.py
+    dest: /etc/graphite-web/local_settings.py
+    owner: root
+    group: root
     mode: 644
 
 - name: create data directory
@@ -53,8 +53,8 @@
   copy:
     src: graphite-web.conf
     dest: /etc/httpd/conf.d/graphite/graphite-web.conf
-    owner: root 
-    group: root 
+    owner: root
+    group: root
     mode: 644
 
 - name: initialize graphite-web database
@@ -68,10 +68,10 @@
     creates: /var/lib/graphite-web/index
 
 - name: chown the sqlite database to apache.apache
-  file: 
-    path: /var/lib/graphite-web/ 
-    owner: apache 
-    group: apache 
+  file:
+    path: /var/lib/graphite-web/
+    owner: apache
+    group: apache
     recurse: yes
 
 - name: Start the MySQL and httpd service
@@ -135,6 +135,7 @@
     - icingaweb2
     - icingacli
     - nagios-plugins-all
+    - nagios-plugins-nrpe
     - icingaweb2-selinux
     - icinga2-selinux
 
@@ -161,12 +162,12 @@
 - name: Get setup token.
   shell: 'icingacli setup token create | sed "s/.*token is: \(.*\)/\1/g"'
   register: setup_token
- 
+
 - name: Enable icinga2 feature perfdata graphite
   icinga2_feature:
     name: "{{ item }}"
     state: present
-  loop: 
+  loop:
     - perfdata
     - graphite
 
@@ -184,16 +185,16 @@
   file:
     path: /etc/icingaweb2/modules/graphite/
     state: directory
-    owner: apache 
-    group: icingaweb2 
+    owner: apache
+    group: icingaweb2
     mode: '0770'
 
 - name: icingaweb2-module-graphite config file
-  template: 
+  template:
     src: config.ini
-    dest: /etc/icingaweb2/modules/graphite/config.ini 
-    owner: apache 
-    group: icingaweb2 
+    dest: /etc/icingaweb2/modules/graphite/config.ini
+    owner: apache
+    group: icingaweb2
     mode: '0660'
 
 - name: Icinga Web2 Installation finished
@@ -460,11 +461,39 @@
 # /usr/lib64/nagios/plugins/check_nrpe -H 192.168.237.106 -c check_load
 # OK - load average: 0.00, 0.01, 0.04|load1=0.000;0.150;0.300;0; load5=0.010;0.100;0.250;0; load15=0.040;0.050;0.200;0;
 # install check_nrpe pluging for icinga2
-# yum install nagios-plugins-nrpe 
+# yum install nagios-plugins-nrpe
 # ====================== install client ==========
-# yum install -y nrpe
+# yum install -y epel-release nrpe nrpe-selinux nagios-plugins-all
 # listn on port 5666 for incoming commnad
 # /etc/nagios/nrpe.cfg
 # allowed_hosts=127.0.0.1,192.168.237.105
 # systemctl start nrpe
 # systemctl enable nrpe
+
+# icinga2 daemon -C - check icinga2 config
+# systemctl reload icinga2
+# icinga2 object list --type CheckCommand --name nrpe
+# systemctl start nrpe
+# systemctl enable nrpe
+
+# yum install -y httpd
+# systemctl start httpd
+# systemctl enable httpd
+# touch /var/www/html/index.html
+# chmod 755 /var/www/html/index.html
+
+# /etc/icinga2/conf.d/commands.conf
+# object CheckCommand "check_serv" {
+#   command = [ PluginDir + "/check_nrpe", "-H", "$address$", "-c", "check_serv", "-a", "$serv$" ]
+# }
+# /etc/nagios/nrpe.cfg
+# dont_blame_nrpe=1
+# command[check_serv]=/usr/lib64/nagios/plugins/check_serv $ARG1$
+
+# object Host "icinga2client"  {
+#   import "P3"
+#   address = "192.168.237.106"
+#   vars.serv = "httpd sshd postfix"
+#   vars.nrpe = "check_load"
+#   vars.os = "Linux"
+#   vars.servP = "P3"

@@ -20,7 +20,7 @@ do
                 check_status=2
         else
                 echo "UNKNOWN - $var : $active_status $enabled_status"
-                exit 3
+                check_status=3
     fi
 done
 
@@ -29,6 +29,7 @@ case "$check_status" in
     0) exit 0 ;;
     1) exit 1 ;;
     2) exit 2 ;;
+    3) exit 3 ;;
 esac
 #=====================================================================
 #!/bin/bash

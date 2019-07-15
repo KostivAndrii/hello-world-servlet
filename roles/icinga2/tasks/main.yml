@@ -287,6 +287,13 @@
 # }
 
 # /etc/icinga2/conf.d/services.conf
+# apply Service "check nrpe" {
+#     import "generic-service"
+#     icon_image = "service.png"
+#     check_command = "check_nrpe"
+
+#     assign where host.vars.nrpe
+# }
 # apply Service "check service status" {
 #     import "generic-service"
 #     check_command = "check_serv"
@@ -320,7 +327,8 @@
 # object Host "icinga2client"  {
 #   import "P3"
 #   address = "192.168.237.106"
-#   vars.serv = "httpd"
+#   vars.serv = "httpd sshd postfix"
+#   vars.nrpe = "check_load"
 #   vars.os = "Linux"
 #   vars.servP = "P3"
 #   vars.http_vhosts["http"] = {
@@ -356,6 +364,9 @@
 # object CheckCommand "check_serv" {
 #   command = [ PluginDir + "/check_serv", "$serv$" ]
 # }
+# object CheckCommand "check_nrpe" {
+#   command = [ PluginDir + "/check_nrpe", "-H", "$address$", "-c", "$nrpe$" ]
+# }
 # ============================================ custom check script ==============
 # #!/bin/bash
 
@@ -379,7 +390,7 @@
 #                 check_status=2
 #         else
 #                 echo "UNKNOWN - $var : $active_status $enabled_status"
-#                 exit 3
+#                 check_status=3
 #     fi
 # done
 
@@ -388,8 +399,8 @@
 #     0) exit 0 ;;
 #     1) exit 1 ;;
 #     2) exit 2 ;;
+#     3) exit 3 ;;
 # esac
-
 # ===================================================    client install ==============
 # yum install https://packages.icinga.com/epel/icinga-rpm-release-7-latest.noarch.rpm
 # yum install icinga2
@@ -444,3 +455,16 @@
 #   password = "ifVaysRZTnV1fWj7qqjT$"
 #   permissions = [ "*" ]
 # }
+
+#  /usr/lib64/nagios/plugins/check_nrpe -h
+# /usr/lib64/nagios/plugins/check_nrpe -H 192.168.237.106 -c check_load
+# OK - load average: 0.00, 0.01, 0.04|load1=0.000;0.150;0.300;0; load5=0.010;0.100;0.250;0; load15=0.040;0.050;0.200;0;
+# install check_nrpe pluging for icinga2
+# yum install nagios-plugins-nrpe 
+# ====================== install client ==========
+# yum install -y nrpe
+# listn on port 5666 for incoming commnad
+# /etc/nagios/nrpe.cfg
+# allowed_hosts=127.0.0.1,192.168.237.105
+# systemctl start nrpe
+# systemctl enable nrpe

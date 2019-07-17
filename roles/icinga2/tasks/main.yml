@@ -456,7 +456,15 @@
 #   password = "ifVaysRZTnV1fWj7qqjT$"
 #   permissions = [ "*" ]
 # }
-
+# ================== How to pass string with spaces to nrpe:
+# 1. /usr/lib64/nagios/plugins/check_nrpe -H 192.168.237.106 -c check_serv -a '"httpd sshd postfix"'
+# 2. object Host "icinga2client"  {
+#      vars.serv = "\"httpd sshd postfix\""
+#   object CheckCommand "check_serv" {
+#     command = [ PluginDir + "/check_nrpe", "-H", "$address$", "-c", "check_serv", "-a", "$serv$" ]
+#   }
+#???   command[check_serv]=/usr/lib64/nagios/plugins/check_serv $ARG1$ $ARG2$
+# ================== How to pass string with spaces to nrpe:
 #  /usr/lib64/nagios/plugins/check_nrpe -h
 # /usr/lib64/nagios/plugins/check_nrpe -H 192.168.237.106 -c check_load
 # OK - load average: 0.00, 0.01, 0.04|load1=0.000;0.150;0.300;0; load5=0.010;0.100;0.250;0; load15=0.040;0.050;0.200;0;

@@ -1,5 +1,15 @@
 #!/bin/bash
 
+warn=$2
+critical=$4
+
+echo "warn: $warn crit; $critical"
+
+total=$(vmstat -s | sed -n 's/^ *\(.*\) K total memory.*/\1/p')
+used=$(vmstat -s | sed -n 's/^ *\(.*\) K used memory.*/\1/p')
+echo "Total MEM: $total K, used MEM: $used K, critical $(($total / (100 -$critical)), warn $(($total / (100-$warn))"
+#!/bin/bash
+
 serv=$1
 echo "Check service(s):  $serv"
 check_status=0
@@ -58,4 +68,32 @@ if [[ $active_status == "active" && $enabled_status == "enabled" ]]; then
         else
                 echo "UNKNOWN - $serv : $active_status $enabled_status"
                 exit 3
+fi
+
+#=====================================================================
+#!/bin/bash
+
+warn=$2
+critical=$4
+
+total=$(vmstat -s | sed -n 's/^ *\(.*\) K total memory.*/\1/p')
+used=$(vmstat -s | sed -n 's/^ *\(.*\) K used memory.*/\1/p')
+
+(( total /= 1000 ))
+(( used /= 1000 ))
+
+cr_m=$(($total * $critical / 100))
+wr_m=$(($total * $warn / 100))
+
+echo "Total MEM: $total M, used MEM: $used M, critical $cr_m M, warn $wr_m M"
+
+if [[ $used -lt $wr_m ]]; then
+                echo "OK - memory usage |memory=$used;$wr_m;$cr_m;0"
+                exit 0
+        elif [[ $used -lt $cr_m ]]; then
+                echo "WARNING - memory usage |memory=$used;$wr_m;$cr_m;0"
+                exit 1
+        else
+                echo "CRITICAL - memory usage |memory=$used;$wr_m;$cr_m;0"
+                exit 2
 fi

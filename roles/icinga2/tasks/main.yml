@@ -386,11 +386,13 @@
 
 # /etc/icinga2/conf.d/commands.conf
 # object CheckCommand "check_serv" {
-#   command = [ PluginDir + "/check_serv", "$serv$" ]
+#   command = [ PluginDir + "/check_nrpe", "-H", "$address$", "-c", "check_serv", "-a", "$serv$" ]
 # }
+
 # object CheckCommand "check_nrpe" {
 #   command = [ PluginDir + "/check_nrpe", "-H", "$address$", "-c", "$nrpe$" ]
 # }
+
 # object CheckCommand "check_mem" {
 #   command = [ PluginDir + "/check_nrpe", "-H", "$address$", "-c", "check_mem" ]
 # }
@@ -456,16 +458,26 @@
 #                 echo "CRITICAL - memory usage |memory=$used;$wr_m;$cr_m;0"
 #                 exit 2
 # fi
-# ===================================================    client install ==============
-# yum install https://packages.icinga.com/epel/icinga-rpm-release-7-latest.noarch.rpm
-# # RHEL sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-7-11.noarch.rpm
-# # RHEL subscription-manager repos --enable rhel-7-server-optional-rpms
+# ==========================  API install / config
+# icinga2 feature list
+# icinga2 feature enable api
+# icinga2 api setup
+# systemctl restart icinga2
+# finish configure backend API: configuration/modules/monitoring/backends/command transport
+# use API Username/API Password from cat /etc/icinga2/conf.d/api-users.conf 
+# ====================== install client ==========
 # yum install -y epel-release nrpe nrpe-selinux nagios-plugins-all
-# # listn on port 5666 for incoming commnad
+# listn on port 5666 for incoming commnad
 # vi /etc/nagios/nrpe.cfg
-# allowed_hosts=127.0.0.1,192.168.237.105
-# systemctl start nrpe
+# allowed_hosts=127.0.0.1,192.168.237.0/24
+# dont_blame_nrpe=1
+# command[check_serv]=/usr/lib64/nagios/plugins/check_serv $ARG1$
+# command[check_mem]=/usr/lib64/nagios/plugins/check_mem -w 5 -c 10
+# systemctl start nrpe ; systemctl enable nrpe
 # systemctl enable nrpe
+
+# yum install -y httpd ; systemctl start httpd ; systemctl enable httpd ; touch /var/www/html/index.html ; chmod 755 /var/www/html/index.html
+# ===================================================    client install ==============
 
 # yum install https://packages.icinga.com/epel/icinga-rpm-release-7-latest.noarch.rpm
 # yum install icinga2
@@ -476,13 +488,6 @@
 # yum install icinga2-selinux
 # icinga2 node wizard
 
-# ==========================  API install / config
-# icinga2 feature list
-# icinga2 feature enable api
-# icinga2 api setup
-# systemctl restart icinga2
-# finish configure backend API: configuration/modules/monitoring/backends/command transport
-# use API Username/API Password from /etc/icinga2/conf.d/api-users.conf 9b223fc924a81e37
 # ==========================  director install / config
 # username = "director"
 # password = "ifVaysRZTnV1fWj7qqjT$"
@@ -525,13 +530,6 @@
 # PROCS OK: 96 processes | procs=96;150;200;0;
 # install check_nrpe pluging for icinga2
 # yum install nagios-plugins-nrpe
-# ====================== install client ==========
-# yum install -y epel-release nrpe nrpe-selinux nagios-plugins-all
-# listn on port 5666 for incoming commnad
-# /etc/nagios/nrpe.cfg
-# allowed_hosts=127.0.0.1,192.168.237.105
-# systemctl start nrpe
-# systemctl enable nrpe
 
 # icinga2 daemon -C - check icinga2 config
 # systemctl reload icinga2
@@ -539,7 +537,7 @@
 # systemctl start nrpe
 # systemctl enable nrpe
 
-# yum install -y httpd
+# yum install -y httpd ; systemctl start httpd ; systemctl enable httpd ; touch /var/www/html/index.html ; chmod 755 /var/www/html/index.html
 # systemctl start httpd
 # systemctl enable httpd
 # touch /var/www/html/index.html
@@ -558,3 +556,58 @@
 #   address = "192.168.237.106"
 #   vars.serv = "\"httpd sshd postfix\""
 #   vars.nrpe = "check_load"
+# ========================================================================================
+# icinga2 daemon -C - check icinga2 config
+# systemctl reload icinga2
+# icinga2 object list --type CheckCommand --name nrpe
+# ========================================================================================
+# yum install -y https://yum.puppet.com/puppet6-release-el-7.noarch.rpm
+# yum -y install puppetserver ntp ntpdate
+# AAA: yum -y install puppet-agent ntp ntpdate
+# ntpdate pool.ntp.org; timedatectl set-timezone Europe/Kiev; systemctl start ntpd; systemctl enable ntpd
+# sed -i 's/^SELINUX=.*/SELINUX=permissive/g' /etc/selinux/config ; setenforce 0
+# setenforce 0
+
+# vi ~/.bash_profile
+# export PATH=/opt/puppetlabs/bin:$PATH
+# source ~/.bash_profile
+
+# vi /etc/hosts
+# 192.168.237.105 puppet-srv.local
+# 192.168.237.106 puppet-cl.local
+
+# vi /etc/puppetlabs/puppet/puppet.conf
+# [master]
+# dns_alt_names = puppet-srv.local
+# vardir = /opt/puppetlabs/server/data/puppetserver
+# logdir = /var/log/puppetlabs/puppetserver
+# rundir = /var/run/puppetlabs/puppetserver
+# pidfile = /var/run/puppetlabs/puppetserver/puppetserver.pid
+# codedir = /etc/puppetlabs/code
+# [main]
+# certname = puppet-srv.local
+# server = puppet-srv.local
+# environment = production
+# runinterval = 1h
+
+# AAA:
+# [main]
+#  certname = puppet-cl.local
+#  server = puppet-srv.local
+#  environment = production
+#  runinterval = 1h
+# AAA:
+# SERVER:
+# systemctl start puppetserver; systemctl enable puppetserver
+# puppet resource service puppet ensure=running enable=true
+# # systemctl enable puppetserver
+# # systemctl status puppetserver
+
+# puppetserver ca setup
+# puppetserver ca list
+# A: puppet agent --test
+# puppetserver ca sign --all
+# # puppetserver ca sign --certname puppet-cl.local
+# S:
+# puppet module install stahnma-epel --version 1.3.1
+# puppet module install puppetlabs/ntp

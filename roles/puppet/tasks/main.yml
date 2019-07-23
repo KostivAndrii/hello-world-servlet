@@ -1,3 +1,8 @@
+hostnamectl set-hostname
+
+puppet cert generate puppet-srv.local --dns_alt_names=puppet-srv.local
+puppet cert generate $(hostname -f) --dns_alt_names=$(hostname -f),puppet
+
 # ==================== agent
 # [root@puppetA puppet]# cat /etc/puppetlabs/puppet/puppet.conf
 # # This file can be used to override the default puppet settings.
@@ -22,7 +27,7 @@
 # # - https://puppet.com/docs/puppet/latest/config_file_main.html
 # # - https://puppet.com/docs/puppet/latest/configuration.html
 # [master]
-# dns_alt_names = puppet-srv.local, puppet
+# dns_alt_names = puppet-srv.local
 # vardir = /opt/puppetlabs/server/data/puppetserver
 # logdir = /var/log/puppetlabs/puppetserver
 # rundir = /var/run/puppetlabs/puppetserver

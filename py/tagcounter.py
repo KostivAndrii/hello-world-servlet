@@ -19,3 +19,13 @@ parser = MyHTMLParser()
 parser.feed('<html><head><title>Test</title></head><body><h1>Parse me!</h1></body></html>')
 
 print(number_of_starttags, number_of_endtags)
+
+
+
+import urllib2
+
+page = urllib2.urlopen('http://stackoverflow.com')
+page_content = page.read()
+
+with open('page_content.html', 'w') as fid:
+    fid.write(page_content)

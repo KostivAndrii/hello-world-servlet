@@ -1,9 +1,8 @@
-#### concurent.futures
+#!/usr/bin/env python3
 import os
 import datetime
+import yaml
 import sqlite3
-import pickle
-# import shutil
 import argparse
 from html.parser import HTMLParser
 from urllib.parse import urlparse
@@ -11,9 +10,10 @@ import urllib.request
 from urllib import error
 from sqlalchemy import Column, LargeBinary, String
 from sqlalchemy.ext.declarative import declarative_base
-# from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
+# import pickle
+from sqlalchemy.ext.serializer import loads, dumps
 
 number_of_starttags = 0
 number_of_endtags = 0
@@ -34,9 +34,8 @@ class Urls(Base):
         self.DT = DT
         self.tags = tags
 
-
 # print(urlparse('https://12factor.net/ru/config').hostname)
-
+# print(urlparse('12factor.net/ru/config').scheme)
 
 # create a subclass and override the handler methods
 class MyHTMLParser(HTMLParser):
@@ -68,8 +67,25 @@ def main():
 
     # url = 'https://12factor.net/ru/config'
     # output_file = "12factor.html"
+    with open("synonims.yaml", 'r') as ymlfile:
+        snnm = yaml.load(ymlfile)
+    # prs_url = urlparse(args.get)
+    # if snnm[args.get] != '':
+    #     prs_url = snnm[args.get]
+
+    # for section in snnm:
+    #     print(section)
+    # print(snnm['mysql'])
+    # print(cfg['other'])
+
+
+
     try:
-        response = urllib.request.urlopen(args.get)
+        if urlparse(args.get).scheme == '':
+            # url2='http://'+args.get
+            response = urllib.request.urlopen(str('http://'+args.get))
+        else:
+            response = urllib.request.urlopen(args.get)
     except error.URLError as e:
         if hasattr(e,'code') :
             print (e.code)
@@ -118,42 +134,44 @@ def main():
     print('Tags frequency    : ', rezults_tag_dict)
     print('Tegs total final: ', sum(rezults_tag_dict.values()))
 
-    with open('filename.pickle', 'wb') as handle:
-        pickle.dump(rezults_tag_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    with open('filename.pickle', 'rb') as handle:
-        rezults_tag_dict_new = pickle.load(handle)
-    print('Tags frequency new: ', rezults_tag_dict_new)
+    # # Pickle
+    # with open('filename.pickle', 'wb') as handle:
+    #     pickle.dump(rezults_tag_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    # with open('filename.pickle', 'rb') as handle:
+    #     rezults_tag_dict_new = pickle.load(handle)
+    # print('Tags frequency new: ', rezults_tag_dict_new)
+
+    # # Pickle + sqlite3
+    # p_dict = pickle.dumps(rezults_tag_dict, protocol=pickle.HIGHEST_PROTOCOL)
+    # site = urlparse(args.get).hostname
+
+    # conn = sqlite3.connect('example.db')
+    # c = conn.cursor()
+    # dt = currentDT.strftime("%Y-%m-%d %H:%M:%S")
+
+    # c.execute('''CREATE TABLE IF NOT EXISTS urls
+    #             (site text, url text, date text, tags blob)''')
+    # c.execute("INSERT INTO urls (site, url, date, tags) VALUES ( ?, ?, ?, ?)", \
+    #     ( urlparse(args.get).hostname , args.get , currentDT.strftime("%Y-%m-%d %H:%M:%S") , p_dict))
+
+    # c.execute("SELECT * FROM urls WHERE site = '12factor.net'")
+    # records = c.fetchall()
+
+    # for row in records:
+    #     print("Site = ", row[0], )
+    #     print("URL = ", row[1])
+    #     print("Parsing date  = ", row[2])
+    #     pickle_rezults_tag_dict = pickle.loads(row[3])
+    #     print("Tags frequency: ", pickle_rezults_tag_dict)
+    #     print('Tegs total final: ', sum(pickle_rezults_tag_dict.values()))
+
+    # conn.commit()
+    # conn.close()
 
 
-    p_dict = pickle.dumps(rezults_tag_dict, protocol=pickle.HIGHEST_PROTOCOL)
-    site = urlparse(args.get).hostname
-
-    conn = sqlite3.connect('example.db')
-    c = conn.cursor()
-    dt = currentDT.strftime("%Y-%m-%d %H:%M:%S")
-
-    c.execute('''CREATE TABLE IF NOT EXISTS urls
-                (site text, url text, date text, tags blob)''')
-    c.execute("INSERT INTO urls (site, url, date, tags) VALUES ( ?, ?, ?, ?)", \
-        ( urlparse(args.get).hostname , args.get , currentDT.strftime("%Y-%m-%d %H:%M:%S") , p_dict))
-
-    c.execute("SELECT * FROM urls WHERE site = '12factor.net'")
-    records = c.fetchall()
-
-    for row in records:
-        print("Site = ", row[0], )
-        print("URL = ", row[1])
-        print("Parsing date  = ", row[2])
-        pickle_rezults_tag_dict = pickle.loads(row[3])
-        print("Tags frequency: ", pickle_rezults_tag_dict)
-        print('Tegs total final: ', sum(pickle_rezults_tag_dict.values()))
-
-
-    conn.commit()
-    conn.close()
-
-    # SQLAlchemy
+    # SQLAlchemy == START
     engine = create_engine('sqlite:///sqlalchemy_example.db')
 
     Base.metadata.create_all(engine)
@@ -162,12 +180,23 @@ def main():
     session = DBSession()
 
     # Insert an Address in the address table
-    new_urls = Urls( urlparse(args.get).hostname , args.get , currentDT.strftime("%Y-%m-%d %H:%M:%S") , p_dict)
+    dpickle = dumps(rezults_tag_dict)
+    new_urls = Urls( urlparse(args.get).hostname , args.get , currentDT.strftime("%Y-%m-%d %H:%M:%S") , \
+        dumps(rezults_tag_dict))
     session.add(new_urls)
     # new_urls.post_code
     session.commit()
     session.query(Urls).all()
-    session.query(Urls).filter(Urls.site_name=='12factor.net')
+    ourSites = session.query(Urls).filter(Urls.site_name=='12factor.net')
+
+    for row in ourSites:
+        print("Site = ", row.site_name )
+        print("URL = ", row.url)
+        print("Parsing date  = ", row.DT)
+        pickle_rezults_tag_dict = loads(row.tags)
+        print("Tags frequency: ", pickle_rezults_tag_dict)
+        print('Tegs total final: ', sum(pickle_rezults_tag_dict.values()))
+    # SQLAlchemy == END
 
     print(list(dict.fromkeys(rezults_tag)))
     print(number_of_starttags, number_of_endtags)
@@ -179,6 +208,35 @@ def main():
 # print(r2)
 # sum(r2.values())
 
+# # Expression Serializer Extension
+# from sqlalchemy.ext.serializer import loads, dumps
+# metadata = MetaData(bind=some_engine)
+# Session = scoped_session(sessionmaker())
+
+# # ... define mappers
+
+# query = Session.query(MyClass).
+#     filter(MyClass.somedata=='foo').order_by(MyClass.sortkey)
+
+# # pickle the query
+# serialized = dumps(query)
+
+# # unpickle.  Pass in metadata + scoped_session
+# query2 = loads(serialized, metadata, Session)
+
+# print query2.all()
+
+# # using yaml configuration fie
+# # https://martin-thoma.com/configuration-files-in-python/
+# import yaml
+
+# with open("config.yml", 'r') as ymlfile:
+#     cfg = yaml.load(ymlfile)
+
+# for section in cfg:
+#     print(section)
+# print(cfg['mysql'])
+# print(cfg['other'])
 
 if __name__ == "__main__":
     # execute only if run as a script

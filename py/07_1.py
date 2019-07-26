@@ -1,21 +1,42 @@
 #### concurent.futures
-import urllib.request
-from urllib import error
+import os
 import datetime
 import sqlite3
 import pickle
-import shutil
+# import shutil
 import argparse
-import os
 from html.parser import HTMLParser
 from urllib.parse import urlparse
-
-
-print(urlparse('https://12factor.net/ru/config').hostname)
+import urllib.request
+from urllib import error
+from sqlalchemy import Column, LargeBinary, String
+from sqlalchemy.ext.declarative import declarative_base
+# from sqlalchemy.orm import relationship
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
 
 number_of_starttags = 0
 number_of_endtags = 0
 rezults_tag = []
+
+Base = declarative_base()
+
+class Urls(Base):
+    __tablename__ = 'al_urls'
+    site_name = Column(String(50), nullable=False, )
+    url = Column(String(250), nullable=False, primary_key=True)
+    DT = Column(String(50), nullable=False, primary_key=True)
+    tags = Column(LargeBinary)
+
+    def __init__(self, site_name, url, DT, tags):
+        self.site_name = site_name
+        self.url = url
+        self.DT = DT
+        self.tags = tags
+
+
+# print(urlparse('https://12factor.net/ru/config').hostname)
+
 
 # create a subclass and override the handler methods
 class MyHTMLParser(HTMLParser):
@@ -132,7 +153,21 @@ def main():
     conn.commit()
     conn.close()
 
+    # SQLAlchemy
+    engine = create_engine('sqlite:///sqlalchemy_example.db')
 
+    Base.metadata.create_all(engine)
+
+    DBSession = sessionmaker(bind=engine)
+    session = DBSession()
+
+    # Insert an Address in the address table
+    new_urls = Urls( urlparse(args.get).hostname , args.get , currentDT.strftime("%Y-%m-%d %H:%M:%S") , p_dict)
+    session.add(new_urls)
+    # new_urls.post_code
+    session.commit()
+    session.query(Urls).all()
+    session.query(Urls).filter(Urls.site_name=='12factor.net')
 
     print(list(dict.fromkeys(rezults_tag)))
     print(number_of_starttags, number_of_endtags)

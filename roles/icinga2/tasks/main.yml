@@ -562,7 +562,7 @@
 # icinga2 object list --type CheckCommand --name nrpe
 # ========================================================================================
 # yum install -y https://yum.puppet.com/puppet6-release-el-7.noarch.rpm
-# yum -y install puppetserver ntp ntpdate
+# SSS: yum -y install puppetserver ntp ntpdate
 # AAA: yum -y install puppet-agent ntp ntpdate
 # ntpdate pool.ntp.org; timedatectl set-timezone Europe/Kiev; systemctl start ntpd; systemctl enable ntpd
 # sed -i 's/^SELINUX=.*/SELINUX=permissive/g' /etc/selinux/config ; setenforce 0
@@ -575,6 +575,7 @@
 # vi /etc/hosts
 # 192.168.237.105 puppet-srv.local
 # 192.168.237.106 puppet-cl.local
+# 192.168.237.107 puppet-cl2.local
 
 # vi /etc/puppetlabs/puppet/puppet.conf
 # [master]
@@ -605,7 +606,7 @@
 
 # puppetserver ca setup
 # puppetserver ca list
-# A: puppet agent --test
+# AAA: puppet agent --test
 # puppetserver ca sign --all
 # # puppetserver ca sign --certname puppet-cl.local
 # S:

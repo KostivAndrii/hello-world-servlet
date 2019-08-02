@@ -20,8 +20,6 @@ from tkinter.messagebox import showinfo
 
 rezults_tag = []
 Base = declarative_base()
-# entry_message = StringVar()
-
 
 class Urls(Base):
     __tablename__ = 'al_urls'
@@ -138,7 +136,6 @@ def read_sql3_pickle(url:str):
         print('Tegs total final: ', sum(pickle_rezults_tag_dict.values()))
     conn.commit()
     conn.close()
-    return pickle_rezults_tag_dict
 
 def store_alchemy_pickle(site_name:str, url:str, DT:datetime.datetime, rezult_dict:{}):
     engine = create_engine('sqlite:///tagcounter.db')
@@ -169,9 +166,8 @@ def read_alchemy_pickle(url:str):
         print("Tags frequency: ", pickle_rezults_tag_dict)
         print('Tegs total final: ', sum(pickle_rezults_tag_dict.values()))
     session.close()
-    return pickle_rezults_tag_dict
 
-def ProcessGET(url:str) -> {}:
+def ProcessGET(url:str):
     # GET
     # download url
     webContent = downloadUrl(url)
@@ -193,8 +189,6 @@ def ProcessGET(url:str) -> {}:
     else:
         store_sql3_pickle(urlparse(url).hostname, url, currentDT.strftime("%Y-%m-%d %H:%M:%S"), rezult_dict)
     print('--------------------------------------------------------------------------------')
-    # read_sql3_pickle(args.get)
-    # print('--------------------------------------------------------------------------------')
 
     # # SQLAlchemy == START
     if urlparse(url).scheme == '':
@@ -202,118 +196,61 @@ def ProcessGET(url:str) -> {}:
     else:
         store_alchemy_pickle(urlparse(url).hostname, url, currentDT.strftime("%Y-%m-%d %H:%M:%S"), rezult_dict)
     print('--------------------------------------------------------------------------------')
-    # read_alchemy_pickle(args.get)
-    # print('--------------------------------------------------------------------------------')
-    return rezult_dict
 
-def ProcessVIEW(url:str) -> {}:
+def ProcessVIEW(url:str):
     # store rezults into sqlite3 with pickle
-    rezult_dict = read_sql3_pickle(url)
+    read_sql3_pickle(url)
     print('--------------------------------------------------------------------------------')
     # SQLAlchemy == START
     read_alchemy_pickle(url)
     print('--------------------------------------------------------------------------------')
-    return rezult_dict
 
 class tagCountGUI(Frame):
     def __init__(self, parent=None):
         Frame.__init__(self, parent)
         self.initUI()
 
-    # def initUI(self):
-    #     # self.title("tagCounter")
-    #     # self.pack(fill=BOTH, expand=1)
-    #     with open("synonims.yaml", 'r') as ymlfile:
-    #         snnm = yaml.load(ymlfile)
-    #     # root = Tk()
-
-    #     self.cb = Combobox( values = list(snnm['synonims'].values()), height=5, state='readonly')
-    #     self.cb.current(0)
-    #     b_SELECT = Button( text='Choose URL', command=self.set_url)
-
-    #     self.entry_message = StringVar()
-    #     e = Entry( textvariable=self.entry_message, width=35)
-
-    #     b_OK = Button( text='Process ', command=self.ProcessURL)
-    #     b = Button( text="Show from base", command=self.SearchInDB)
-
-    #     Label( text="Select URL:").grid(column=0, row=0)
-    #     self.cb.grid(column=1, row=0, columnspan=2)
-    #     b_SELECT.grid(column=3, row=0, pady=10, padx=10)
-
-    #     Label(text="Edit URL:").grid(column=0, row=1, pady=10, padx=10)
-    #     e.grid(column=1, row=1, columnspan=3)
-    #     b_OK.grid(column=0, row=2, pady=10, padx=10)
-    #     b.grid(column=3, row=2, pady=10, padx=10)
-
-    #     self.lb_out = Message( text="")
-    #     self.lb_out.grid(column=0, row=3, columnspan=3, sticky='W', pady=2, padx=2)
-
     def initUI(self):
         # self.title("tagCounter")
         # self.pack(fill=BOTH, expand=1)
         with open("synonims.yaml", 'r') as ymlfile:
             snnm = yaml.load(ymlfile)
-        # self.root = Tk()
-        # self.root.title("tagCounter")
-        Synframe = LabelFrame( text=" Select synonim: ")
-        Synframe.grid( row=0, column=0, columnspan=3, padx=2, pady=2 )
-
-        self.cb = Combobox( Synframe, values = list(snnm['synonims'].values()), height=5, state='readonly')
+        # root = Tk()
+        self.cb = Combobox(values = list(snnm['synonims'].values()), height=5, state='readonly')
         self.cb.current(0)
-        b_SELECT = Button( Synframe, text='Choose URL', command=self.set_url)
-
-        Label( Synframe, text="Select URL:").grid(column=0, row=0, padx=2, pady=2 )
-        self.cb.grid(row=0, column=1, columnspan=2, padx=2, pady=2 )
-        b_SELECT.grid( row=0, column=3, padx=2, pady=2  )
-
-        mainframe = LabelFrame( text=" Input URL and choose action: " )
-        mainframe.grid( row=1, column=0, columnspan=3, padx=2, pady=2 )
+        b_SELECT = Button( text='Choose URL', command=self.set_url)
 
         self.entry_message = StringVar()
-        e = Entry( mainframe, textvariable=self.entry_message, width=35)
-        b_OK = Button( mainframe, text='Process ', command=self.ProcessURL)
-        b = Button( mainframe, text="Show from base", command=self.SearchInDB)
+        e = Entry( textvariable=self.entry_message, width=35)
 
-        Label( mainframe, text="Edit URL:").grid( row=0, column=0, padx=2, pady=2 )
-        e.grid( row=0, column=1, columnspan=3, padx=2, pady=2 )
-        b_OK.grid( row=1, column=0, padx=2, pady=2 )
-        b.grid( row=1, column=3, padx=2, pady=2 )
+        b_OK = Button( text='Process ', command=self.ProcessURL)
+        b = Button( text="Show from base", command=self.SearchInDB)
 
-        # labelframe = LabelFrame( text="", height=100, width=150 )
-        # labelframe.grid( row=3, column=0, columnspan=3, sticky='W', padx=2, pady=2 )
+        Label(text="Select URL:").grid(column=0, row=0, pady=10, padx=10)
+        self.cb.grid(column=1, row=0, columnspan=2)
+        b_SELECT.grid(column=3, row=0, pady=10, padx=10)
 
-        self.lb_out = Message( width=120 )
-        self.lb_out.grid( row=3, column=0, sticky='W', pady=2, padx=2 )
+        Label(text="Edit URL:").grid(column=0, row=1, pady=10, padx=10)
+        e.grid(column=1, row=1, columnspan=3)
+        b_OK.grid(column=0, row=2, pady=10, padx=10)
+        b.grid(column=3, row=2, pady=10, padx=10)
 
     def set_url(self):
         self.entry_message.set(self.cb.get())
 
     def ProcessURL(self):
         if self.entry_message.get() == '':
-            self.lb_out.config(text="Please type or choose URL to process! Please type or choose URL to process! Please type or choose URL to process! Please type or choose URL to process!")
             showinfo(title='popup', message='Please type or choose URL to process!')
         else:
-            self.lb_out.config(text='Processing URL: '+ self.entry_message.get())
             showinfo(title='popup', message='Processing URL: '+ self.entry_message.get())
-            rezult_dict = ProcessGET(self.entry_message.get())
-            self.lb_out.config(text=print_dict(rezult_dict))
+            ProcessGET(self.entry_message.get())
 
     def SearchInDB(self):
         if self.entry_message.get() == '':
-            self.lb_out.config(text="Please type or choose URL to process!")
             showinfo(title='popup', message='Please type or choose URL to process!')
         else:
-            self.lb_out.config(text='Searching in DB for info about URL: '+ self.entry_message.get())
             showinfo(title='popup', message='Searching in DB for info about URL: '+ self.entry_message.get())
-            rezult_dict = ProcessVIEW(self.entry_message.get())
-            self.lb_out.config(text=print_dict(rezult_dict))
-
-def print_dict( output_dict ) -> str:
-    message_text = ''
-    for key, value in output_dict.items():
-        message_text += str(key) + '\t\t' + str(value) + '  \n'
-    return message_text
+            ProcessVIEW(self.entry_message.get())
 
 def main():
     # # procassing input parameters
@@ -330,44 +267,12 @@ def main():
         exit(0)
 
     if not args.get and not args.view:
-            root = Tk()
-            root.title("tagCounter")
-            window = tagCountGUI(root)
+            window = tagCountGUI()
             window.mainloop()
     if args.get:
         ProcessGET(args.get)
     if args.view:
         ProcessVIEW(args.view)
-
-    # # GET
-    # # download url
-    # webContent = downloadUrl(args.get)
-    # # write operation into log file
-    # currentDT = datetime.datetime.now()
-    # logg_site_processing(args.get, currentDT)
-
-    # # instantiate the parser and fed it some HTML
-    # parser = MyHTMLParser()
-    # # parse HTML and collect tags info
-    # parser.feed(webContent)
-
-    # # calculate each tags amounts
-    # rezult_dict = process_tag_calculating(parser.tags_list)
-
-    # # store rezults into sqlite3 with pickle
-    # store_sql3_pickle(urlparse(args.get).hostname, args.get, currentDT.strftime("%Y-%m-%d %H:%M:%S"), rezult_dict)
-    # print('--------------------------------------------------------------------------------')
-    # read_sql3_pickle(args.get)
-    # print('--------------------------------------------------------------------------------')
-
-    # # # SQLAlchemy == START
-    # store_alchemy_pickle(urlparse(args.get).hostname, args.get, currentDT.strftime("%Y-%m-%d %H:%M:%S"), rezult_dict)
-    # print('--------------------------------------------------------------------------------')
-    # read_alchemy_pickle(args.get)
-    # print('--------------------------------------------------------------------------------')
-
-
-    # print(list(dict.fromkeys(rezults_tag)))
 
 if __name__ == "__main__":
     # execute only if run as a script

@@ -1,0 +1,10 @@
+setup.py
+tagCounter/__init__.py
+tagCounter/synonims.yaml
+tagCounter/tagcounter.py
+tagCounter/test_tagcounter.py
+tagCounter.egg-info/PKG-INFO
+tagCounter.egg-info/SOURCES.txt
+tagCounter.egg-info/dependency_links.txt
+tagCounter.egg-info/requires.txt
+tagCounter.egg-info/top_level.txt

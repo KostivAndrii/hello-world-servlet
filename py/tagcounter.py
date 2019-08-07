@@ -1,27 +1,25 @@
 #!/usr/bin/env python3
 import os
 import datetime
+import argparse
 import yaml
 import sqlite3
-import argparse
 from html.parser import HTMLParser
 from urllib.parse import urlparse
 import urllib.request
 from urllib import error
-from sqlalchemy import Column, LargeBinary, String
+from sqlalchemy import Column, LargeBinary, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
-import pickle
 from sqlalchemy.ext.serializer import loads, dumps
+from sqlalchemy.orm import sessionmaker
+import pickle
 from tkinter import *
 from tkinter.ttk import *
-from tkinter.messagebox import showinfo
 
-rezults_tag = []
 Base = declarative_base()
-# output amount in console mode 0/1/2
-verbosity = 2
+# output amount in console mode 0/1
+verbosity = 0
+close_tags = False
 
 class Urls(Base):
     __tablename__ = 'al_urls'
@@ -43,17 +41,22 @@ class MyHTMLParser(HTMLParser):
         super(MyHTMLParser, self).__init__()
 
     def handle_starttag(self, tag, attrs):
-        print('<',tag, '>')
+        if verbosity == 1: print('<',tag, '>')
         self.tags_list.append(tag)
 
     def handle_endtag(self, tag):
-        print('</',tag, '>')
-        self.tags_list.append(tag)
+        if verbosity == 1: print('</',tag, '>')
+        if close_tags: self.tags_list.append(tag)
 
 def downloadUrl(url:str) -> str:
     # load YAML synonims
-    with open("synonims.yaml", 'r') as ymlfile:
-        snnm = yaml.load(ymlfile)
+    try:
+        with open("synonims.yaml", 'r') as ymlfile:
+            snnm = yaml.load(ymlfile)
+    except FileNotFoundError:
+        snnm = {'synonims': {'ggl': 'google.com', 'hbr': 'habr.com', '12f': '12factor.net/ru/config', 'ydx': 'yandex.ru'}}
+        # print("can't open synonims.yaml")
+        # sys.exit(2)
     # download html for analizing
     try:
         # check url in synonims YAML
@@ -91,12 +94,12 @@ def logg_site_processing(url:str, DT:datetime.datetime):
 def process_tag_calculating(rezults_tag:[]) -> {}:
     # calculate each tags amounts
     print('')
-    print(rezults_tag)
-    print('Tegs total: ', len(rezults_tag))
+    if verbosity == 1: print(rezults_tag)
+    if verbosity == 1: print('Tegs total: ', len(rezults_tag))
     rezults_tag_list = list(dict.fromkeys(rezults_tag))
-    print('uniq tags list: ', rezults_tag_list)
+    if verbosity == 1: print('uniq tags list: ', rezults_tag_list)
     rezults_tag_dict = {r_tag:rezults_tag.count(r_tag) for r_tag in rezults_tag_list}
-    print('Tags frequency    : ', rezults_tag_dict)
+    print('Tags occurrence    : ', rezults_tag_dict)
     print('Tegs total final: ', sum(rezults_tag_dict.values()))
     return rezults_tag_dict
 
@@ -128,11 +131,12 @@ def read_sql3_pickle(url:str):
         print("No records in SQLite3 DB about URL: ", url)
     for row in records:
         print("Site from SQLite3 = ", row[0], )
-        print("URL = ", row[1])
-        print("Parsing date  = ", row[2])
+        print("URL               = ", row[1])
+        print("Parsing date      = ", row[2])
         pickle_rezults_tag_dict = pickle.loads(row[3])
-        print("Tags frequency: ", pickle_rezults_tag_dict)
-        print('Tegs total final: ', sum(pickle_rezults_tag_dict.values()))
+        print("Tags occurrence   : ", pickle_rezults_tag_dict)
+        print('Tegs total final  : ', sum(pickle_rezults_tag_dict.values()))
+        print()
     conn.commit()
     conn.close()
     return pickle_rezults_tag_dict
@@ -160,11 +164,12 @@ def read_alchemy_pickle(url:str):
         print("No records in SQLAlchemy DB about URL: ", url)
     for row in ourSites:
         print("Site from SQLAlchemy = ", row.site_name )
-        print("URL = ", row.url)
-        print("Parsing date  = ", row.DT)
+        print("URL                  = ", row.url)
+        print("Parsing date         = ", row.DT)
         pickle_rezults_tag_dict = loads(row.tags)
-        print("Tags frequency: ", pickle_rezults_tag_dict)
-        print('Tegs total final: ', sum(pickle_rezults_tag_dict.values()))
+        print("Tags occurrence      : ", pickle_rezults_tag_dict)
+        print('Tegs total final     : ', sum(pickle_rezults_tag_dict.values()))
+        print()
     session.close()
     return pickle_rezults_tag_dict
 
@@ -182,6 +187,8 @@ def ProcessGET(url:str) -> {}:
     parser.feed(webContent)
 
     # calculate each tags amounts
+    print('TAG counting for URL:\n' + url )
+
     rezult_dict = process_tag_calculating(parser.tags_list)
 
     # store rezults into sqlite3 with pickle
@@ -189,20 +196,20 @@ def ProcessGET(url:str) -> {}:
         store_sql3_pickle(urlparse(str('http://'+url)).hostname, url, currentDT.strftime("%Y-%m-%d %H:%M:%S"), rezult_dict)
     else:
         store_sql3_pickle(urlparse(url).hostname, url, currentDT.strftime("%Y-%m-%d %H:%M:%S"), rezult_dict)
-    print('SQLite3 stored --------------------------------------------------------------------------------')
+    print('------------ SQLite3 stored --------------------------------------------------------------------------------')
     if urlparse(url).scheme == '':
         store_alchemy_pickle(urlparse(str('http://'+url)).hostname, url, currentDT.strftime("%Y-%m-%d %H:%M:%S"), rezult_dict)
     else:
         store_alchemy_pickle(urlparse(url).hostname, url, currentDT.strftime("%Y-%m-%d %H:%M:%S"), rezult_dict)
-    print('Alchemy stored --------------------------------------------------------------------------------')
+    print('------------ Alchemy stored --------------------------------------------------------------------------------')
     return rezult_dict
 
 def ProcessVIEW(url:str) -> {}:
     # store rezults into sqlite3 with pickle
     rezult_dict = read_sql3_pickle(url)
-    print('SQLite3--------------------------------------------------------------------------------')
+    print('------------ SQLite3 --------------------------------------------------------------------------------')
     read_alchemy_pickle(url)
-    print('Alchemy--------------------------------------------------------------------------------')
+    print('------------ Alchemy --------------------------------------------------------------------------------')
     return rezult_dict
 
 class tagCountGUI(Frame):
@@ -210,11 +217,15 @@ class tagCountGUI(Frame):
         Frame.__init__(self, parent)
         self.initUI()
 
-
     def initUI(self):
-        # preparing data 
-        with open("synonims.yaml", 'r') as ymlfile:
-            snnm = yaml.load(ymlfile)
+        # preparing data
+        try:
+            with open("synonims.yaml", 'r') as ymlfile:
+                snnm = yaml.load(ymlfile)
+        except FileNotFoundError:
+            # print("can't open synonims.yaml")
+            # sys.exit(2)
+            snnm = {'synonims': {'ggl': 'google.com', 'hbr': 'habr.com', '12f': '12factor.net/ru/config', 'ydx': 'yandex.ru'}}
 
         Synframe = LabelFrame( text=" Select synonim: ")
         Synframe.grid( row=0, column=0, columnspan=3, padx=2, pady=2 )
@@ -238,7 +249,7 @@ class tagCountGUI(Frame):
         Label( mainframe, text="Edit URL:").grid( row=0, column=0, padx=2, pady=2 )
         e.grid( row=0, column=1, columnspan=3, padx=2, pady=2 )
         b_OK.grid( row=1, column=0, padx=2, pady=2 )
-        b.grid( row=1, column=3, padx=2, pady=2 )
+        b.grid( row=1, column=3, sticky='E', padx=2, pady=2 )
 
         labelframe = LabelFrame()
         labelframe.grid( row=3, column=0, columnspan=4, sticky='W', padx=2, pady=2 )
@@ -252,31 +263,27 @@ class tagCountGUI(Frame):
     def ProcessURL(self):
         ProcessingUrl = self.entry_message.get()
         if ProcessingUrl == '':
-            self.lb_out.config(text="Please type or choose URL to process!")
-            # showinfo(title='popup', message='Please type or choose URL to process!')
+            self.lb_out.config(text='Please type or choose URL to process!')
         else:
             self.lb_out.config(text='Processing URL: \t'+ ProcessingUrl)
-            # showinfo(title='popup', message='Processing URL: '+ ProcessingUrl)
             rezult_dict = ProcessGET(ProcessingUrl)
             self.lb_out.config(text=print_dict(rezult_dict, ProcessingUrl))
 
     def SearchInDB(self):
         ProcessingUrl = self.entry_message.get()
         if ProcessingUrl == '':
-            self.lb_out.config(text="Please type or choose URL to process!")
-            # showinfo(title='popup', message='Please type or choose URL to process!')
+            self.lb_out.config(text='Please type or choose URL to process!')
         else:
             self.lb_out.config(text='Searching in DB for info about URL: \t'+ ProcessingUrl)
-            # showinfo(title='popup', message='Searching in DB for info about URL: '+ ProcessingUrl)
             rezult_dict = ProcessVIEW(ProcessingUrl)
             self.lb_out.config(text=print_dict(rezult_dict, ProcessingUrl))
 
 def print_dict( output_dict, url ) -> str:
     message_text = 'TAG counting for URL:\n' + url + '\n\n'
     for key, value in output_dict.items():
-        message_text += str(key) + '\t\t\t\t' + str(value) + '  \n'
+        message_text += str(key) + '\t\t\t\t\t' + str(value) + '  \n'
     message_text += '\n'
-    message_text += 'Разом:\t\t\t' + str(sum(output_dict.values()))
+    message_text += 'Разом:\t\t\t\t\t' + str(sum(output_dict.values()))
     return message_text
 
 def main():
@@ -302,7 +309,6 @@ def main():
         ProcessGET(args.get)
     if args.view:
         ProcessVIEW(args.view)
-
 
 
 if __name__ == "__main__":
